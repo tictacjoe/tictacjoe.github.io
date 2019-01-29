@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Joseph Kidd"
-date: 2019-01-28
+date: 2019-01-29
 ---
 
 ## today's post
