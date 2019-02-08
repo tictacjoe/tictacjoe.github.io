@@ -1,5 +1,5 @@
 ---
-published: false
+published: true
 ---
 > _Four Ducks on Lake Anne_
 
