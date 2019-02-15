@@ -1,6 +1,0 @@
----
-published: true
----
-> _Four Ducks on Lake Anne_
-
-![ducks.jpg]({{site.baseurl}}/pics/ducks-25.jpg)
