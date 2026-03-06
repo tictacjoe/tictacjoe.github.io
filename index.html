@@ -7,32 +7,10 @@ title: Joseph Kidd
   <h1>Joseph Kidd</h1>
   <p>Engineer and builder. Data, infra, and pragmatic tooling.</p>
 
-  <h2>Featured</h2>
-  <ul>
-    <li><a href="https://tictacjoe.github.io/homebot-twilio/">HomeBot Twilio Relay</a> — FastAPI service to send SMS via Twilio, deployable on Railway.</li>
-  </ul>
-
-  <h2>Latest</h2>
-  <ul class="posts">
-    {% for post in site.posts limit:3 %}
-      <li>
-        <span>{{ post.date | date: "%Y-%m-%d" }}</span>
-        — <a href="{{ post.url }}">{{ post.title }}</a>
-      </li>
-    {% endfor %}
-  </ul>
-
-  <h2>Explore</h2>
-  <ul>
-    <li><a href="/projects.html">Projects</a></li>
-    <li><a href="/resume.html">Résumé</a></li>
-    <li><a href="/blog/">Blog</a></li>
-  </ul>
-
   <h2>Projects</h2>
   <div class="projects-grid">
     <a class="project-card" href="/projects-open.html">
-      <img src="/pics/ducks-25.jpg" alt="Projects Open">
+      <img src="/pics/ducks-25.jpg" alt="Selected Projects">
       <div class="meta">
         <strong>Selected Projects</strong>
         <div>Open demos and write-ups</div>
@@ -42,10 +20,20 @@ title: Joseph Kidd
       <img src="/pics/verodin.jpg" alt="HomeBot Twilio Relay">
       <div class="meta">
         <strong>HomeBot Twilio Relay</strong>
-        <div>Docs site on GitHub Pages</div>
+        <div>FastAPI SMS relay on Railway</div>
       </div>
     </a>
   </div>
+
+  <h2>Latest Posts</h2>
+  <ul class="posts">
+    {% for post in site.posts limit:3 %}
+      <li>
+        <span>{{ post.date | date: "%Y-%m-%d" }}</span>
+        — <a href="{{ post.url }}">{{ post.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
 
   <h2>Contact</h2>
   <p><a href="mailto:tictacjoe@gmail.com">tictacjoe@gmail.com</a> · <a href="https://github.com/tictacjoe">github.com/tictacjoe</a></p>
