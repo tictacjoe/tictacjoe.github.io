@@ -1,30 +1,52 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-135288989-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+---
+layout: default
+title: Joseph Kidd
+---
 
-  gtag('config', 'UA-135288989-1');
-</script>
+<div class="blurb">
+  <h1>Joseph Kidd</h1>
+  <p>Engineer and builder. Data, infra, and pragmatic tooling.</p>
 
-		<title>Joseph Kidd</title>
-		<!-- link to main stylesheet -->
-		<link rel="stylesheet" type="text/css" href="/css/main.css">
-	</head>
-	<body>
-		<div class="container">
-    		<div class="blurb">
-        		<h1>joestuff</h1>
-    		</div><!-- /.blurb -->
-		</div><!-- /.container -->
-		<footer>
-    		<ul>
-        		<li><a href="mailto:tictacjoe@gmail.com">email</a></li>
-        		<ul>
-		</footer>
-	</body>
-</html>
+  <h2>Featured</h2>
+  <ul>
+    <li><a href="https://tictacjoe.github.io/homebot-twilio/">HomeBot Twilio Relay</a> — FastAPI service to send SMS via Twilio, deployable on Railway.</li>
+  </ul>
+
+  <h2>Latest</h2>
+  <ul class="posts">
+    {% for post in site.posts limit:3 %}
+      <li>
+        <span>{{ post.date | date: "%Y-%m-%d" }}</span>
+        — <a href="{{ post.url }}">{{ post.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <h2>Explore</h2>
+  <ul>
+    <li><a href="/projects.html">Projects</a></li>
+    <li><a href="/resume.html">Résumé</a></li>
+    <li><a href="/blog/">Blog</a></li>
+  </ul>
+
+  <h2>Projects</h2>
+  <div class="projects-grid">
+    <a class="project-card" href="/projects-open.html">
+      <img src="/pics/ducks-25.jpg" alt="Projects Open">
+      <div class="meta">
+        <strong>Selected Projects</strong>
+        <div>Open demos and write-ups</div>
+      </div>
+    </a>
+    <a class="project-card" href="https://tictacjoe.github.io/homebot-twilio/">
+      <img src="/pics/verodin.jpg" alt="HomeBot Twilio Relay">
+      <div class="meta">
+        <strong>HomeBot Twilio Relay</strong>
+        <div>Docs site on GitHub Pages</div>
+      </div>
+    </a>
+  </div>
+
+  <h2>Contact</h2>
+  <p><a href="mailto:tictacjoe@gmail.com">tictacjoe@gmail.com</a> · <a href="https://github.com/tictacjoe">github.com/tictacjoe</a></p>
+</div>
