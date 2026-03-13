@@ -1,14 +1,20 @@
 {
-      "manifest_version": "1.0",
-      "owner": "tictacjoe",
-      "base_url": "https://tictacjoe.github.io/bot/",
-      "description": "Bot-accessible static file repository for Claude browser extension",
-      "files": [
-              {
-                        "name": "context.json",
-                        "url": "https://tictacjoe.github.io/bot/context.json",
-                        "type": "json",
-                        "description": "Extension context: capabilities, constraints, preferences, and owner info. Fetch this first to orient the bot at session start."
-              }
-      ]
+        "manifest_version": "1.0",
+        "owner": "tictacjoe",
+        "base_url": "https://tictacjoe.github.io/bot/",
+        "description": "Bot-accessible static file repository for Claude browser extension",
+        "files": [
+                  {
+                              "name": "context.json",
+                              "url": "https://tictacjoe.github.io/bot/context.json",
+                              "type": "json",
+                              "description": "Extension context: capabilities, constraints, preferences, and owner info. Fetch this first to orient the bot at session start."
+                  },
+                  {
+                              "name": "how-to-use-context.md",
+                              "url": "https://tictacjoe.github.io/bot/how-to-use-context.md",
+                              "type": "md",
+                              "description": "Human-readable guide explaining how to use context.json with the bot."
+                  }
+        ]
 }
