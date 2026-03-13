@@ -1,0 +1,7 @@
+{
+    "manifest_version": "1.0",
+    "owner": "tictacjoe",
+    "base_url": "https://tictacjoe.github.io/bot/",
+    "description": "Bot-accessible static file repository for Claude browser extension",
+    "files": []
+}
