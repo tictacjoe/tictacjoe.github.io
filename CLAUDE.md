@@ -5,7 +5,7 @@ Live at: https://tictacjoe.github.io/
 ## Architecture
 
 Pure static HTML site — no Jekyll, no build step for the main site.
-GitHub Actions builds and deploys everything on push to `master`.
+GitHub Actions builds and deploys everything on push to `main`.
 
 ## Directory Structure
 
@@ -27,7 +27,7 @@ GitHub Actions builds and deploys everything on push to `master`.
 
 ## How Deployment Works
 
-Push to `master` → GitHub Action runs → builds Vite app → copies everything
+Push to `main` → GitHub Action runs → builds Vite app → copies everything
 into `_site/` → deploys via `actions/deploy-pages` → live in ~1 min.
 
 The action assembles the site by:
