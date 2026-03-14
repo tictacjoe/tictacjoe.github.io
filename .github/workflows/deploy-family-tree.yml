@@ -1,21 +1,44 @@
-name: Deploy Family Tree
+name: Deploy Site
 on:
   push:
     branches: [master]
-    paths: ['family-tree/**']
+  workflow_dispatch:
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: cd family-tree && npm install && npm run build
-      - uses: peaceiris/actions-gh-pages@v4
+
+      - name: Build family-tree Vite app
+        run: cd family-tree && npm install && npm run build
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          # Copy all static site files, excluding source-only dirs
+          rsync -a --exclude='_site' --exclude='family-tree' --exclude='.git' \
+            --exclude='_layouts' --exclude='_posts' --exclude='_config.yml' \
+            --exclude='.github' --exclude='node_modules' \
+            . _site/
+          # Copy built family-tree app
+          cp -r family-tree/dist/. _site/family-tree/
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./family-tree/dist
-          destination_dir: family-tree
+          path: _site
+
+      - uses: actions/deploy-pages@v4
+        id: deployment

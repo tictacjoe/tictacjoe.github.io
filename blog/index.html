@@ -1,11 +1,35 @@
----
-layout: default
-title: Joe's Blog
----
-	<h1>{{ page.title }}</h1>
-	<ul class="posts">
-
-	  {% for post in site.posts %}
-	    <li><span>{{ post.date | date_to_string }}</span> » <a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a></li>
-	  {% endfor %}
-	</ul>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Joe's Blog</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135288989-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-135288989-1');
+    </script>
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="https://github.com/tictacjoe">GitHub</a></li>
+      </ul>
+    </nav>
+    <div class="container">
+      <h1>Joe's Blog</h1>
+      <ul class="posts">
+        <li><span>20 Dec 2018</span> » <a href="/blog/just-four-ducks-for-now.html">Just Four Ducks for Now</a></li>
+      </ul>
+    </div>
+    <footer>
+      <ul>
+        <li><a href="mailto:tictacjoe@gmail.com">email</a></li>
+        <li><a href="https://github.com/tictacjoe">github.com/tictacjoe</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>
