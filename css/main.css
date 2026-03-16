@@ -106,6 +106,7 @@ ul.posts li a {
     flex-wrap: wrap;
     gap: 16px;
     margin: 12px 0 24px;
+    justify-content: center;
 }
 .project-card {
     width: 220px;
