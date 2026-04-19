@@ -2,12 +2,10 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>How This Page Was Built</title>
+    <title>How This Page Was Built — Warts and All</title>
     <link rel="stylesheet" type="text/css" href="/css/main.css">
     <style>
-      .turn {
-        margin-bottom: 20px;
-      }
+      .turn { margin-bottom: 20px; }
       .speaker {
         font-family: 'Helvetica', 'Arial', sans-serif;
         font-size: 0.75em;
@@ -35,19 +33,48 @@
       }
       .bubble p { margin: 0 0 10px; }
       .bubble p:last-child { margin-bottom: 0; }
-      .bubble ul {
-        margin: 6px 0 10px;
-        padding-left: 20px;
-      }
+      .bubble ul { margin: 6px 0 10px; padding-left: 20px; }
       .bubble ul:last-child { margin-bottom: 0; }
       .bubble li { margin-bottom: 4px; }
       .bubble strong { color: #111; }
-      .decision {
-        display: inline-block;
-        background: #e8f5e9;
-        color: #2a7a3b;
+      .error-block {
+        background: #1e1e1e;
+        color: #f48771;
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.8em;
+        line-height: 1.5;
+        margin: 8px 0 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .terminal-block {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.8em;
+        line-height: 1.5;
+        margin: 8px 0 4px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .terminal-block .prompt { color: #7ec8e3; }
+      .error-label, .terminal-label {
         font-family: 'Helvetica', sans-serif;
-        font-size: 0.78em;
+        font-size: 0.72em;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #aaa;
+        margin-bottom: 4px;
+        margin-top: 10px;
+      }
+      .badge {
+        display: inline-block;
+        font-family: 'Helvetica', sans-serif;
+        font-size: 0.72em;
         font-weight: bold;
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -55,11 +82,10 @@
         padding: 2px 8px;
         margin-bottom: 8px;
       }
-      .divider {
-        border: none;
-        border-top: 1px solid #e8e8e8;
-        margin: 32px 0;
-      }
+      .badge.error { background: #fdecea; color: #c0392b; }
+      .badge.fix { background: #e8f5e9; color: #2a7a3b; }
+      .badge.discovery { background: #fff8e1; color: #b7770d; }
+      .divider { border: none; border-top: 1px solid #e8e8e8; margin: 32px 0; }
       .meta-note {
         font-family: 'Helvetica', sans-serif;
         font-size: 0.85em;
@@ -79,23 +105,25 @@
     </nav>
     <div class="container">
       <div class="blurb">
-        <h1>How this page was built</h1>
-        <p>The <a href="/claude-code">Claude Code demo page</a> was designed and built in a single conversation with Claude Code. Below is the actual back-and-forth — from the first message to a live URL.</p>
-        <p class="meta-note">This is a lightly edited transcript. The full session took about 20 minutes.</p>
+        <h1>How this page was built — warts and all</h1>
+        <p>The <a href="/claude-code">Claude Code demo page</a> was designed and built in a single conversation. Below is the real transcript — including the mistakes, the dead deployment, the wrong assumptions, and the merge conflict. This is what working with an AI coding assistant actually looks like.</p>
+        <p class="meta-note">Total session time: about 20 minutes. Errors encountered: 4.</p>
 
         <hr class="divider">
+
+        <h2>Designing the page</h2>
 
         <div class="turn">
           <div class="speaker joe">Joe</div>
           <div class="bubble joe">
-            <p>I'm showing someone Claude Code and could use some of my past work in Claude Code to make a presentation of the things that you can do.</p>
+            <p>I'm showing someone Claude Code and could use some of my past work to make a presentation of the things that you can do.</p>
           </div>
         </div>
 
         <div class="turn">
           <div class="speaker claude">Claude</div>
           <div class="bubble claude">
-            <p>I explored your project directories — homebot-twilio, jtda, plants, td, music-instruct — to understand what material was available. Then I asked: who is your audience?</p>
+            <p>I explored your project directories — homebot-twilio, jtda, plants, td, music-instruct — to understand what material was available. Then I asked: who is the audience?</p>
           </div>
         </div>
 
@@ -109,160 +137,161 @@
         <div class="turn">
           <div class="speaker claude">Claude</div>
           <div class="bubble claude">
-            <p>Is this a live demo or a slide deck he can look at on his own?</p>
+            <p>Asked: is this a live demo or a slide deck? How much time? What does he already know?</p>
           </div>
         </div>
 
         <div class="turn">
           <div class="speaker joe">Joe</div>
           <div class="bubble joe">
-            <p>Show in real time in this interface.</p>
+            <p>Live demo, 15–20 minutes. He built a CustomGPT in ChatGPT and has used Perplexity.</p>
           </div>
         </div>
 
         <div class="turn">
           <div class="speaker claude">Claude</div>
           <div class="bubble claude">
-            <p>How much time do you have — a few minutes or more like 20–30?</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>Maybe 15–20 minutes.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>I proposed three approaches:</p>
-            <ul>
-              <li><strong>Full dev cycle:</strong> walk through homebot-twilio end to end</li>
-              <li><strong>Capability sampler:</strong> quick hits across 5–6 distinct features</li>
-              <li><strong>Bridge to his AI course:</strong> start with something he's studying, build from there</li>
-            </ul>
-            <p>Recommendation: option 3 leading into option 2 — open with his coursework as a hook, then show real capabilities.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>His course is basics — some AI ethics and social issues. He built a CustomGPT in ChatGPT. He also has some experience with Perplexity.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>That's the hook: you built a CustomGPT — I built the <em>server</em> it talks to. I sketched a 15-minute arc: memory demo → homebot-twilio codebase tour → live code generation → ethics research tie-in → close.</p>
-            <p>Then I checked whether homebot-twilio was still live. It wasn't — Railway deployment returned a 404. The code was all there locally, though.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>What else besides homebot-twilio might be interesting?</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>I suggested five options: the memory system, live code generation, web research with citations, GitHub MCP integration, and the td personal notes coding system. My pick for the strongest three-demo set: <strong>memory + codebase explanation + live build.</strong></p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>I like the 3 demo set.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>Laid out the full 15-minute flow with timing for each demo and a closing line.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>Can you make a presentation he could see on his phone as well?</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>Is this a companion during the demo, or something to share afterward?</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>I want to send him something now and then follow up with a demo if he wants it.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>Three format options: GitHub Pages (shareable URL), a GitHub repo README, or a standalone HTML file. Recommended GitHub Pages — you already have tictacjoe.github.io set up.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>Go with option 1.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>Checked the existing site: Jekyll layout, clean CSS, already mobile-responsive. Proposed a seven-section page structure and got approval.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>Don't include "how to reach me" — I'm right here. Also maybe a section about relative strengths and weaknesses of Gemini vs. Claude vs. ChatGPT, the different Claude flavors, and a blurb about Anthropic's commitment to ethical AI use.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>Updated the design: dropped the contact section, added AI comparison, Claude model tiers, and Anthropic safety. Final structure confirmed.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker joe">Joe</div>
-          <div class="bubble joe">
-            <p>Build it.</p>
-          </div>
-        </div>
-
-        <div class="turn">
-          <div class="speaker claude">Claude</div>
-          <div class="bubble claude">
-            <p>Discovered mid-build that the site is pure static HTML, not Jekyll — rewrote the page accordingly, resolved a merge conflict on the main branch, and pushed to GitHub Pages.</p>
-            <p>Total: one conversation, one URL.</p>
+            <p>Proposed three approaches, recommended: open with the CustomGPT hook ("you built the GPT — I built the server it talks to"), then show memory, codebase explanation, and live code generation.</p>
           </div>
         </div>
 
         <hr class="divider">
+        <h2>First problem: the deployment was dead</h2>
 
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <p>I checked whether the homebot-twilio Railway deployment was still live:</p>
+            <div class="terminal-label">terminal</div>
+            <div class="terminal-block"><span class="prompt">$ curl -s https://homebot-twilio-production.up.railway.app/healthz</span></div>
+            <div class="error-label">response</div>
+            <div class="error-block">{"status":"error","code":404,"message":"Application not found"}</div>
+            <p>The free-tier Railway deployment had expired. The code was all there locally — just no live server.</p>
+          </div>
+        </div>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <p>This didn't actually kill the demo. The codebase is still real and explainable. We just skip the "hit the live endpoint" moment and use it as a code walkthrough instead.</p>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <h2>Building the page</h2>
+
+        <div class="turn">
+          <div class="speaker joe">Joe</div>
+          <div class="bubble joe">
+            <p>Can you make a presentation he could see on his phone? I want to send him something now and follow up with a demo if he wants it.</p>
+          </div>
+        </div>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <p>Proposed GitHub Pages (shareable URL, already set up at tictacjoe.github.io). Joe approved. I checked the existing site structure and CSS before writing anything.</p>
+          </div>
+        </div>
+
+        <div class="turn">
+          <div class="speaker joe">Joe</div>
+          <div class="bubble joe">
+            <p>Don't include "how to reach me" — I'm right here. Add a comparison of ChatGPT vs Claude vs Gemini, the Claude model tiers, and a blurb about Anthropic's ethical AI commitment.</p>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <h2>Second problem: wrong assumption about Jekyll</h2>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <div class="badge error">mistake</div>
+            <p>I saw a <code>_layouts/</code> directory and a <code>_config.yml</code> in the repo and assumed this was a Jekyll site. I wrote the page with Jekyll front matter at the top:</p>
+            <div class="terminal-block">---
+layout: default
+title: What Claude Code Can Actually Do
+---</div>
+            <p>I also added a <code>meta viewport</code> tag to <code>_layouts/default.html</code>, thinking that would fix mobile rendering.</p>
+          </div>
+        </div>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <div class="badge discovery">discovery</div>
+            <p>Mid-build, I found a <code>CLAUDE.md</code> file inside the repo that said:</p>
+            <div class="terminal-block">"Pure static HTML site — no Jekyll, no build step for the main site.
+GitHub Actions builds and deploys everything on push to main."</div>
+            <p>The <code>_layouts/</code> directory was a leftover from a previous setup. Jekyll front matter would appear as raw text on the page.</p>
+          </div>
+        </div>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <div class="badge fix">fix</div>
+            <p>Rewrote the page as plain HTML using the template from the CLAUDE.md. Added the viewport tag directly in the page's own <code>&lt;head&gt;</code>. Reverted the unnecessary <code>_layouts/default.html</code> change.</p>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <h2>Third problem: TLS error on push</h2>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <div class="badge error">error</div>
+            <p>First push attempt to GitHub failed with a network error:</p>
+            <div class="error-block">error: unable to rewind rpc post data - try increasing http.postBuffer
+error: RPC failed; curl 56 GnuTLS recv error (-12): A TLS fatal alert has been received.
+fatal: the remote end hung up unexpectedly</div>
+          </div>
+        </div>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <div class="badge fix">fix</div>
+            <p>Retried the push. It went through on the second attempt — a transient WSL/network issue, not a code problem.</p>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <h2>Fourth problem: master vs. main branch conflict</h2>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <div class="badge error">error</div>
+            <p>The local repo was on a <code>master</code> branch. GitHub had renamed the default branch to <code>main</code> at some point. When the push went through, it created a new <code>master</code> branch on the remote instead of updating <code>main</code>. GitHub Pages was serving from <code>main</code>, so the new page wasn't live yet.</p>
+          </div>
+        </div>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <div class="badge fix">fix</div>
+            <p>Fetched origin to get the remote <code>main</code> branch, then ran <code>git merge master</code> to bring the new page in. This triggered a merge conflict in a blog post file (<code>blog/just-four-ducks-for-now.html</code>) that had diverged between the two branches.</p>
+            <div class="terminal-block">CONFLICT (content): Merge conflict in blog/just-four-ducks-for-now.html
+Automatic merge failed; fix conflicts and then commit the result.</div>
+            <p>Resolved by taking the remote <code>main</code> version of that file (it was unrelated to our changes), then committed the merge and pushed to <code>main</code>. Page went live.</p>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <h2>End result</h2>
+
+        <div class="turn">
+          <div class="speaker claude">Claude</div>
+          <div class="bubble claude">
+            <p>One conversation, four errors, about 20 minutes. The page is live at <a href="/claude-code">tictacjoe.github.io/claude-code</a>.</p>
+            <p>This is what AI-assisted development actually looks like. The AI doesn't get everything right the first time — but it finds its mistakes, explains them, and fixes them without starting over.</p>
+          </div>
+        </div>
+
+        <hr class="divider">
         <p><a href="/claude-code">View the finished page &rarr;</a></p>
 
       </div>
