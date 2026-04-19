@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>What Claude Code Can Actually Do</title>
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <style>
+      .demo-label {
+        font-family: 'Helvetica', 'Arial', sans-serif;
+        font-size: 0.75em;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #888;
+        margin-bottom: 6px;
+      }
+      .demo-block {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 6px;
+        padding: 16px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.82em;
+        line-height: 1.6;
+        overflow-x: auto;
+        margin: 6px 0 24px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .demo-block .prompt { color: #7ec8e3; }
+      .demo-block .comment { color: #6a9955; }
+      .model-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        background: #fff;
+      }
+      .model-card strong {
+        font-family: 'Helvetica', 'Arial', sans-serif;
+        font-size: 1em;
+        color: #111;
+      }
+      .model-card .tag {
+        display: inline-block;
+        font-size: 0.75em;
+        font-family: 'Helvetica', sans-serif;
+        background: #f0f4ff;
+        color: #2a6db5;
+        border-radius: 4px;
+        padding: 2px 8px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      .model-card p { margin: 8px 0 0; color: #444; }
+      .compare-row {
+        border-bottom: 1px solid #f0f0f0;
+        padding: 12px 0;
+      }
+      .compare-row:last-child { border-bottom: none; }
+      .compare-name {
+        font-family: 'Helvetica', sans-serif;
+        font-weight: bold;
+        font-size: 0.95em;
+        color: #111;
+        margin-bottom: 4px;
+      }
+      .compare-good { color: #2a7a3b; font-size: 0.9em; margin-bottom: 2px; }
+      .compare-weak { color: #888; font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="https://github.com/tictacjoe">GitHub</a></li>
+      </ul>
+    </nav>
+    <div class="container">
+      <div class="blurb">
+        <h1>What Claude Code can actually do</h1>
+        <p>You've built a CustomGPT. Claude Code is the tool that built the <em>server</em> it would talk to — and a lot more. Here's what it looks like in practice, using real projects.</p>
+
+        <h2>1 — It remembers you</h2>
+        <p>Unlike ChatGPT, Claude Code keeps a persistent memory file on your machine. Ask it about your projects, preferences, or past decisions and it answers from real notes — not just the current conversation.</p>
+        <div class="demo-label">real memory query — terminal output</div>
+        <div class="demo-block"><span class="prompt">$ claude "what are my active projects?"</span>
+
+Your active projects:
+  homebot-twilio    FastAPI SMS relay on Railway
+                    (backend for a CustomGPT)
+  jtda              topological data analysis via
+                    quantum algorithms
+  plants            iHarvest hydroponics grow log,
+                    started 2025-12-15
+  music-instruct    advanced harmony, songwriting,
+                    pedal board
+  td                personal notes and to-do tree,
+                    plain text files</div>
+
+        <h2>2 — It understands real code</h2>
+        <p>Ask it to explain an entire codebase and it reads every file, maps the architecture, and explains it in plain English. The project below is the server a CustomGPT calls to send a real SMS text message.</p>
+        <div class="demo-label">explaining a real project — terminal output</div>
+        <div class="demo-block"><span class="prompt">$ claude "explain this codebase like I'm a CS student"</span>
+
+This is a FastAPI web server with one job: receive a
+request from a CustomGPT and send a real SMS via Twilio.
+
+Three endpoints:
+  /healthz   is the server running?
+  /readyz    are credentials configured?
+  /send-sms  send the actual text message
+
+Auth is an API key in the request header — only the
+CustomGPT that knows the secret can call it.
+Twilio credentials live in environment variables,
+never in the code itself.
+
+The whole thing deploys to Railway with one push.</div>
+
+        <h2>3 — It builds things live</h2>
+        <p>Name a topic and Claude writes working code around it on the spot. Here's a toy AI bias detector for job postings — written in about 10 seconds:</p>
+        <div class="demo-label">live code generation — terminal output</div>
+        <div class="demo-block"><span class="prompt">$ claude "write a toy bias detector for job descriptions"</span>
+
+def check_bias(text):
+    masculine = ["competitive", "dominant",
+                 "ninja", "rockstar"]
+    feminine  = ["collaborative", "supportive",
+                 "nurturing", "empathetic"]
+
+    t = text.lower()
+    m = sum(w in t for w in masculine)
+    f = sum(w in t for w in feminine)
+
+    if m > f: return f"Skews masculine ({m} signals)"
+    if f > m: return f"Skews feminine ({f} signals)"
+    return "Relatively neutral"
+
+<span class="comment"># Try it:
+# check_bias("We need a competitive rockstar ninja")
+# → Skews masculine (3 signals)</span></div>
+
+        <h2>ChatGPT vs. Claude vs. Gemini</h2>
+        <p>Each tool has a genuine strength. Here's an honest read:</p>
+
+        <div class="compare-row">
+          <div class="compare-name">ChatGPT (OpenAI)</div>
+          <div class="compare-good">+ Largest ecosystem. Best plugin and CustomGPT builder tooling. Most people are already on it.</div>
+          <div class="compare-weak">- Can be sycophantic — tends to agree with you rather than push back. Weaker on very long documents.</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-name">Claude (Anthropic)</div>
+          <div class="compare-good">+ Best for long documents, nuanced reasoning, and serious coding work. 200K token context window. Safety-first by design.</div>
+          <div class="compare-weak">- Smaller ecosystem. No image generation. Fewer integrations than OpenAI.</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-name">Gemini (Google)</div>
+          <div class="compare-good">+ Deepest Google Workspace integration — works natively in Docs, Gmail, Sheets. Built-in search grounding.</div>
+          <div class="compare-weak">- Less consistent reasoning. Often feels more like enhanced search than a thinking collaborator.</div>
+        </div>
+
+        <h2>Claude models</h2>
+        <p>Anthropic ships three tiers, each optimized for different tradeoffs between speed, cost, and capability.</p>
+
+        <div class="model-card">
+          <strong>Haiku</strong><span class="tag">fastest · cheapest</span>
+          <p>Simple lookups, quick summaries, high-volume automation. Responds in under a second. Good for tasks where cost matters more than depth.</p>
+        </div>
+        <div class="model-card">
+          <strong>Sonnet</strong><span class="tag">balanced · daily driver</span>
+          <p>Best price-to-performance ratio. What Claude Code runs by default. Strong enough for real development, writing, and research.</p>
+        </div>
+        <div class="model-card">
+          <strong>Opus</strong><span class="tag">most capable</span>
+          <p>Complex reasoning, hard architectural decisions, deep research. Slower and more expensive — worth it when the problem is genuinely hard.</p>
+        </div>
+
+        <h2>Anthropic and AI safety</h2>
+        <p>Most AI companies treat safety as a compliance layer added after the fact. Anthropic was founded specifically because its researchers believed powerful AI needed to be built more carefully from the start.</p>
+        <p><strong>Constitutional AI</strong> — Claude is trained against a written set of principles, not just human approval ratings. It's designed to reason about whether something is harmful, not just avoid flagged keywords.</p>
+        <p><strong>Responsible Scaling Policy</strong> — Anthropic commits publicly to safety evaluations before shipping more powerful models. If a model crosses defined capability thresholds, development slows and audits happen before release.</p>
+        <p><strong>Deliberate omissions</strong> — Claude has no image generation, in part to avoid contributing to synthetic media and deepfake harms at scale. These are conscious product decisions, not technical limitations.</p>
+        <p>Whether this fully solves the problem is genuinely debated — and Anthropic would say so too. But it's a meaningfully different posture than "ship fast, patch the ethics later."</p>
+      </div>
+    </div>
+    <footer>
+      <ul>
+        <li><a href="mailto:tictacjoe@gmail.com">email</a></li>
+        <li><a href="https://github.com/tictacjoe">github.com/tictacjoe</a></li>
+      </ul>
+    </footer>
+  </body>
+</html>
