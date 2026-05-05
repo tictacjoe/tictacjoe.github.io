@@ -251,12 +251,28 @@
     }
 
     async function loadGenres() {
+      const CACHE_KEY = 'jw_genres';
+      const CACHE_TTL = 24 * 60 * 60 * 1000;
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { ts, data: cachedData } = JSON.parse(cached);
+        if (Date.now() - ts < CACHE_TTL) {
+          genres = cachedData;
+          renderGenreList();
+          return;
+        }
+      }
       const data = await gql({
         operationName: 'GetGenres',
         variables: {},
         query: 'query GetGenres { genres { shortName translation(language: en) } }',
       });
       genres = data.data.genres.sort((a, b) => a.translation.localeCompare(b.translation));
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: genres }));
+      renderGenreList();
+    }
+
+    function renderGenreList() {
       const el = document.getElementById('genre-display');
       el.textContent = '';
       genres.forEach((g, i) => {
