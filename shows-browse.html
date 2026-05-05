@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Streaming Browser — tictacjoe</title>
+  <link rel="stylesheet" type="text/css" href="/css/main.css">
+  <style>
+    body { max-width: 1200px; }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 24px;
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 0.92em;
+    }
+    .control-group { min-width: 180px; }
+    .control-group h3 {
+      font-size: 0.8em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #555;
+      margin: 0 0 8px;
+      border-bottom: 1px solid #e8e8e8;
+      padding-bottom: 4px;
+    }
+    .control-group label {
+      display: block;
+      margin-bottom: 4px;
+      cursor: pointer;
+      color: #333;
+    }
+    .control-group input[type="checkbox"],
+    .control-group input[type="radio"] {
+      margin-right: 6px;
+    }
+
+    .genre-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 0.92em;
+    }
+    .genre-row label {
+      font-size: 0.8em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #555;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .genre-row input[type="text"] {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+      width: 280px;
+    }
+    .genre-hint {
+      font-size: 0.8em;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .sort-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 0.92em;
+    }
+    .sort-row span {
+      font-size: 0.8em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #555;
+    }
+    .sort-row label { cursor: pointer; color: #333; }
+    .sort-row input[type="radio"] { margin-right: 4px; }
+
+    button#search {
+      background: #2a6db5;
+      color: #fff;
+      border: none;
+      padding: 10px 28px;
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 0.95em;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 24px;
+    }
+    button#search:hover { background: #1a4d8a; }
+    button#search:disabled { background: #aaa; cursor: default; }
+
+    #status {
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 12px;
+      min-height: 1.4em;
+    }
+
+    .table-wrap { overflow-x: auto; }
+    table {
+      border-collapse: collapse;
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 0.85em;
+      width: 100%;
+      min-width: 800px;
+    }
+    th {
+      text-align: left;
+      padding: 6px 12px 6px 0;
+      border-bottom: 2px solid #222;
+      font-size: 0.8em;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #444;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    th:hover { color: #2a6db5; }
+    th.sorted { color: #2a6db5; }
+    td {
+      padding: 5px 12px 5px 0;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+      color: #333;
+    }
+    tr:hover td { background: #f5f8ff; }
+    td.num { text-align: right; padding-right: 16px; }
+    th.num { text-align: right; padding-right: 16px; }
+
+    @media (max-width: 600px) {
+      .controls { flex-direction: column; }
+      .genre-row input[type="text"] { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/blog">Blog</a></li>
+      <li><a href="https://github.com/tictacjoe">GitHub</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1>Streaming Browser</h1>
+    <p>Browse movies and shows across streaming services via JustWatch data.</p>
+
+    <div class="controls">
+      <div class="control-group" id="services-group">
+        <h3>Services <small style="font-weight:normal;text-transform:none;letter-spacing:0">(blank = all)</small></h3>
+        <label><input type="checkbox" value="nfx"> Netflix</label>
+        <label><input type="checkbox" value="hbo"> Max (HBO)</label>
+        <label><input type="checkbox" value="hlu"> Hulu</label>
+        <label><input type="checkbox" value="prv"> Amazon Prime</label>
+        <label><input type="checkbox" value="dnp"> Disney+</label>
+        <label><input type="checkbox" value="apl"> Apple TV+</label>
+        <label><input type="checkbox" value="pct"> Peacock</label>
+        <label><input type="checkbox" value="prm"> Paramount+</label>
+        <label><input type="checkbox" value="mbi"> MUBI</label>
+        <label><input type="checkbox" value="sho"> Showtime</label>
+      </div>
+
+      <div class="control-group">
+        <h3>Type</h3>
+        <label><input type="radio" name="type" value="MOVIE" checked> Movies</label>
+        <label><input type="radio" name="type" value="SHOW"> TV Shows</label>
+        <label><input type="radio" name="type" value="BOTH"> Both</label>
+      </div>
+
+      <div class="control-group" id="genres-list">
+        <h3>Available Genres</h3>
+        <div id="genre-display" style="color:#aaa;font-size:0.85em;line-height:1.8">Loading...</div>
+      </div>
+    </div>
+
+    <div class="genre-row">
+      <div>
+        <label for="genre-input">Genres</label>
+        <input type="text" id="genre-input" placeholder="e.g. act hrr  or  act and scf">
+        <div class="genre-hint">OR: act hrr &nbsp; AND: act and hrr &nbsp; Mixed: act hrr and scf</div>
+      </div>
+    </div>
+
+    <div class="sort-row">
+      <span>Sort by:</span>
+      <label><input type="radio" name="sort" value="rt" checked> RT%</label>
+      <label><input type="radio" name="sort" value="imdb"> IMDB</label>
+      <label><input type="radio" name="sort" value="year"> Year</label>
+    </div>
+
+    <button id="search">Search</button>
+
+    <div id="status"></div>
+    <div class="table-wrap">
+      <table id="results" style="display:none">
+        <thead>
+          <tr>
+            <th data-col="genre">Genre</th>
+            <th data-col="title">Title</th>
+            <th data-col="year" class="num">Year</th>
+            <th data-col="imdb" class="num">IMDB</th>
+            <th data-col="rt" class="num">RT%</th>
+            <th data-col="director">Director</th>
+            <th data-col="lead1">Lead 1</th>
+            <th data-col="lead2">Lead 2</th>
+            <th data-col="lead3">Lead 3</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    <ul>
+      <li><a href="mailto:tictacjoe@gmail.com">email</a></li>
+      <li><a href="https://github.com/tictacjoe">github.com/tictacjoe</a></li>
+    </ul>
+  </footer>
+
+  <script>
+    const WORKER = 'https://netflix-browse.tictacjoe.workers.dev';
+    let genres = [];
+    let currentRows = [];
+    let sortCol = 'rt';
+    let sortAsc = false;
+
+    function text(str) {
+      const el = document.createTextNode(str == null ? '' : String(str));
+      return el;
+    }
+
+    async function gql(payload) {
+      const r = await fetch(WORKER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      return r.json();
+    }
+
+    async function loadGenres() {
+      const data = await gql({
+        operationName: 'GetGenres',
+        variables: {},
+        query: 'query GetGenres { genres { shortName translation(language: en) } }',
+      });
+      genres = data.data.genres.sort((a, b) => a.translation.localeCompare(b.translation));
+      const el = document.getElementById('genre-display');
+      el.textContent = '';
+      genres.forEach((g, i) => {
+        const line = document.createElement('div');
+        const num = document.createElement('span');
+        num.style.color = '#999';
+        num.textContent = String(i + 1).padStart(2, ' ') + '. ';
+        const code = document.createElement('b');
+        code.textContent = g.shortName;
+        const name = document.createTextNode(' ' + g.translation);
+        line.appendChild(num);
+        line.appendChild(code);
+        line.appendChild(name);
+        el.appendChild(line);
+      });
+    }
+
+    function resolveToken(token) {
+      const n = parseInt(token);
+      if (!isNaN(n) && n >= 1 && n <= genres.length) return genres[n - 1].shortName;
+      const match = genres.find(g =>
+        g.shortName === token || g.translation.toLowerCase().includes(token)
+      );
+      return match ? match.shortName : null;
+    }
+
+    async function fetchTitles(genreList, packages, objTypes) {
+      const filter = { objectTypes: objTypes, genres: genreList };
+      if (packages.length) filter.packages = packages;
+      const data = await gql({
+        operationName: 'GetPopularTitles',
+        variables: { country: 'US', language: 'en', first: 100, filter },
+        query: `query GetPopularTitles($country: Country!, $language: Language!, $first: Int!, $filter: TitleFilter) {
+          popularTitles(country: $country, first: $first, filter: $filter) {
+            edges { node { content(country: $country, language: $language) {
+              title originalReleaseYear
+              credits { role name }
+              scoring { imdbScore tomatoMeter }
+            } } }
+          }
+        }`,
+      });
+      const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
+      const label = genreList.map(g => genreLookup[g] || g).join('/');
+      const results = {};
+      for (const e of data.data.popularTitles.edges) {
+        const c = e.node.content;
+        const credits = c.credits || [];
+        const scoring = c.scoring || {};
+        const directors = credits.filter(x => x.role === 'DIRECTOR').map(x => x.name);
+        const actors = credits.filter(x => x.role === 'ACTOR').map(x => x.name).slice(0, 3);
+        const imdb = scoring.imdbScore;
+        const rt = scoring.tomatoMeter;
+        const title = c.title || '';
+        results[title] = {
+          genre: label,
+          title,
+          year: c.originalReleaseYear ? String(c.originalReleaseYear) : '',
+          imdb: imdb != null ? imdb.toFixed(1) : '',
+          rt: rt != null ? String(rt) : '',
+          director: directors[0] || '',
+          lead1: actors[0] || '',
+          lead2: actors[1] || '',
+          lead3: actors[2] || '',
+          _imdb: imdb || 0,
+          _rt: rt || 0,
+          _year: c.originalReleaseYear || 0,
+        };
+      }
+      return results;
+    }
+
+    function sortRows(rows, col, asc) {
+      const numCols = { imdb: '_imdb', rt: '_rt', year: '_year' };
+      const key = numCols[col] || col;
+      return [...rows].sort((a, b) => {
+        const av = a[key], bv = b[key];
+        if (typeof av === 'number') return asc ? av - bv : bv - av;
+        return asc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+      });
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById('tbody');
+      tbody.textContent = '';
+
+      const cols = ['genre', 'title', 'year', 'imdb', 'rt', 'director', 'lead1', 'lead2', 'lead3'];
+      const numCols = new Set(['year', 'imdb', 'rt']);
+
+      for (const r of rows) {
+        const tr = document.createElement('tr');
+        for (const col of cols) {
+          const td = document.createElement('td');
+          if (numCols.has(col)) td.className = 'num';
+          let val = r[col];
+          if (col === 'rt' && val) val = val + '%';
+          td.appendChild(text(val));
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+
+      document.getElementById('results').style.display = '';
+      document.querySelectorAll('th').forEach(th => {
+        th.classList.toggle('sorted', th.dataset.col === sortCol);
+      });
+    }
+
+    document.querySelectorAll('th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        if (sortCol === th.dataset.col) {
+          sortAsc = !sortAsc;
+        } else {
+          sortCol = th.dataset.col;
+          sortAsc = sortCol === 'year';
+        }
+        currentRows = sortRows(currentRows, sortCol, sortAsc);
+        renderTable(currentRows);
+      });
+    });
+
+    document.getElementById('search').addEventListener('click', async () => {
+      const btn = document.getElementById('search');
+      const status = document.getElementById('status');
+      btn.disabled = true;
+      document.getElementById('results').style.display = 'none';
+
+      const packages = [...document.querySelectorAll('#services-group input:checked')].map(el => el.value);
+      const typeVal = document.querySelector('input[name="type"]:checked').value;
+      const objTypes = typeVal === 'BOTH' ? ['MOVIE', 'SHOW'] : [typeVal];
+      const raw = document.getElementById('genre-input').value.trim().toLowerCase();
+      sortCol = document.querySelector('input[name="sort"]:checked').value;
+      sortAsc = sortCol === 'year';
+
+      const andGroups = raw.split('and').map(g => g.trim().split(/\s+/).filter(Boolean));
+      const resolvedGroups = andGroups
+        .map(group => group.map(t => resolveToken(t)).filter(Boolean))
+        .filter(g => g.length);
+
+      if (!resolvedGroups.length) {
+        status.textContent = 'No valid genres entered.';
+        btn.disabled = false;
+        return;
+      }
+
+      status.textContent = 'Fetching…';
+      try {
+        const allSets = [];
+        for (const group of resolvedGroups) {
+          status.textContent = 'Fetching: ' + group.join(' OR ') + '…';
+          allSets.push(await fetchTitles(group, packages, objTypes));
+        }
+
+        let common = new Set(Object.keys(allSets[0]));
+        for (const s of allSets.slice(1)) common = new Set([...common].filter(t => t in s));
+
+        currentRows = [...common].map(title => {
+          const row = { ...allSets[0][title] };
+          if (allSets.length > 1) row.genre = allSets.map(s => s[title]?.genre).filter(Boolean).join(' & ');
+          return row;
+        });
+
+        currentRows = sortRows(currentRows, sortCol, sortAsc);
+        status.textContent = currentRows.length + ' title' + (currentRows.length !== 1 ? 's' : '') + ' found.';
+        renderTable(currentRows);
+      } catch (e) {
+        status.textContent = 'Error: ' + e.message;
+      }
+      btn.disabled = false;
+    });
+
+    loadGenres();
+  </script>
+</body>
+</html>
