@@ -83,7 +83,7 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 1em;
-      width: 260px;
+      width: 280px;
       display: block;
     }
     .genre-field-box input[type="text"].active-field {
@@ -259,18 +259,18 @@
       <div class="genre-field-box">
         <label for="genre-or">OR — match any of these</label>
         <div class="input-wrap">
-          <input type="text" id="genre-or" placeholder="action horror comedy…" autocomplete="off" class="active-field">
+          <input type="text" id="genre-or" placeholder="reality tv, action…" autocomplete="off" class="active-field">
           <div id="ac-or" class="ac-dropdown"></div>
         </div>
-        <div class="genre-hint">Titles matching ANY genre listed &nbsp;<span class="genre-clear" onclick="clearField('genre-or')">clear</span></div>
+        <div class="genre-hint">Comma-separated &mdash; titles matching ANY genre listed &nbsp;<span class="genre-clear" onclick="clearField('genre-or')">clear</span></div>
       </div>
       <div class="genre-field-box">
         <label for="genre-and">AND — must also include</label>
         <div class="input-wrap">
-          <input type="text" id="genre-and" placeholder="thriller drama…" autocomplete="off">
+          <input type="text" id="genre-and" placeholder="science fiction, drama…" autocomplete="off">
           <div id="ac-and" class="ac-dropdown"></div>
         </div>
-        <div class="genre-hint">Intersect with each of these genres &nbsp;<span class="genre-clear" onclick="clearField('genre-and')">clear</span></div>
+        <div class="genre-hint">Comma-separated &mdash; intersect with each genre &nbsp;<span class="genre-clear" onclick="clearField('genre-and')">clear</span></div>
       </div>
     </div>
 
@@ -339,8 +339,15 @@
 
     function addGenreToField(name) {
       const el = document.getElementById(activeFieldId);
-      const cur = el.value.trim();
-      el.value = cur ? cur + ' ' + name : name;
+      const cur = el.value.trimEnd();
+      // append after trailing comma or start fresh
+      if (!cur) {
+        el.value = name + ', ';
+      } else if (cur.endsWith(',')) {
+        el.value = cur + ' ' + name + ', ';
+      } else {
+        el.value = cur + ', ' + name + ', ';
+      }
       el.focus();
     }
 
@@ -351,10 +358,17 @@
       const dropdown = document.getElementById(dropdownId);
       let activeIdx = -1;
 
+      // Returns the prefix (everything before the current token) and the current token being typed
       function currentToken() {
         const val = input.value;
-        const lastSpace = val.lastIndexOf(' ');
-        return { prefix: val.slice(0, lastSpace + 1), token: val.slice(lastSpace + 1).toLowerCase() };
+        const lastComma = val.lastIndexOf(',');
+        if (lastComma >= 0) {
+          return {
+            prefix: val.slice(0, lastComma + 1) + ' ',
+            token: val.slice(lastComma + 1).trim().toLowerCase(),
+          };
+        }
+        return { prefix: '', token: val.trim().toLowerCase() };
       }
 
       function showSuggestions() {
@@ -387,7 +401,7 @@
 
       function selectSuggestion(name) {
         const { prefix } = currentToken();
-        input.value = prefix + name + ' ';
+        input.value = prefix + name + ', ';
         dropdown.style.display = 'none';
         activeIdx = -1;
         input.focus();
@@ -480,11 +494,25 @@
       });
     }
 
+    // Split a field value on commas, resolve each token to a genre shortName, deduplicate
+    function tokenizeField(raw) {
+      return [...new Set(
+        raw.split(',')
+          .map(t => t.trim())
+          .filter(Boolean)
+          .map(t => resolveToken(t))
+          .filter(Boolean)
+      )];
+    }
+
     function resolveToken(token) {
       const n = parseInt(token);
       if (!isNaN(n) && n >= 1 && n <= genres.length) return genres[n - 1].shortName;
-      const match = genres.find(g => g.translation.toLowerCase() === token)
-        || genres.find(g => g.translation.toLowerCase().includes(token));
+      // exact match first, then startsWith, then includes
+      const match =
+        genres.find(g => g.translation.toLowerCase() === token) ||
+        genres.find(g => g.translation.toLowerCase().startsWith(token)) ||
+        genres.find(g => g.translation.toLowerCase().includes(token));
       return match ? match.shortName : null;
     }
 
@@ -608,9 +636,9 @@
       sortAsc = sortCol === 'year';
 
       const resolvedGroups = [];
-      const orTokens = orRaw.split(/\s+/).filter(Boolean).map(t => resolveToken(t)).filter(Boolean);
+      const orTokens = tokenizeField(orRaw);
       if (orTokens.length) resolvedGroups.push(orTokens);
-      const andTokens = andRaw.split(/\s+/).filter(Boolean).map(t => resolveToken(t)).filter(Boolean);
+      const andTokens = tokenizeField(andRaw);
       for (const t of andTokens) resolvedGroups.push([t]);
 
       if (!resolvedGroups.length) {
@@ -623,7 +651,8 @@
       try {
         const allSets = [];
         for (const group of resolvedGroups) {
-          status.textContent = 'Fetching: ' + group.join(' OR ') + '…';
+          const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
+          status.textContent = 'Fetching: ' + group.map(g => genreLookup[g] || g).join(' OR ') + '…';
           allSets.push(await fetchTitles(group, packages, objTypes));
         }
         let common = new Set(Object.keys(allSets[0]));
