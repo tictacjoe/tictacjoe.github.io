@@ -262,7 +262,7 @@
           <input type="text" id="genre-or" placeholder="reality tv, action…" autocomplete="off" class="active-field">
           <div id="ac-or" class="ac-dropdown"></div>
         </div>
-        <div class="genre-hint">Comma-separated &mdash; titles matching ANY genre listed &nbsp;<span class="genre-clear" onclick="clearField('genre-or')">clear</span></div>
+        <div class="genre-hint">Comma-separated — blank = all &nbsp;<span class="genre-clear" onclick="clearField('genre-or')">clear</span></div>
       </div>
       <div class="genre-field-box">
         <label for="genre-and">AND — must also include</label>
@@ -270,7 +270,7 @@
           <input type="text" id="genre-and" placeholder="science fiction, drama…" autocomplete="off">
           <div id="ac-and" class="ac-dropdown"></div>
         </div>
-        <div class="genre-hint">Comma-separated &mdash; intersect with each genre &nbsp;<span class="genre-clear" onclick="clearField('genre-and')">clear</span></div>
+        <div class="genre-hint">Comma-separated — intersect with each genre &nbsp;<span class="genre-clear" onclick="clearField('genre-and')">clear</span></div>
       </div>
     </div>
 
@@ -340,7 +340,6 @@
     function addGenreToField(name) {
       const el = document.getElementById(activeFieldId);
       const cur = el.value.trimEnd();
-      // append after trailing comma or start fresh
       if (!cur) {
         el.value = name + ', ';
       } else if (cur.endsWith(',')) {
@@ -358,7 +357,6 @@
       const dropdown = document.getElementById(dropdownId);
       let activeIdx = -1;
 
-      // Returns the prefix (everything before the current token) and the current token being typed
       function currentToken() {
         const val = input.value;
         const lastComma = val.lastIndexOf(',');
@@ -494,7 +492,6 @@
       });
     }
 
-    // Split a field value on commas, resolve each token to a genre shortName, deduplicate
     function tokenizeField(raw) {
       return [...new Set(
         raw.split(',')
@@ -508,7 +505,6 @@
     function resolveToken(token) {
       const n = parseInt(token);
       if (!isNaN(n) && n >= 1 && n <= genres.length) return genres[n - 1].shortName;
-      // exact match first, then startsWith, then includes
       const match =
         genres.find(g => g.translation.toLowerCase() === token) ||
         genres.find(g => g.translation.toLowerCase().startsWith(token)) ||
@@ -517,8 +513,9 @@
     }
 
     async function fetchTitles(genreList, packages, objTypes) {
-      const filter = { objectTypes: objTypes, genres: genreList };
-      if (packages.length) filter.packages = packages;
+      const filter = { objectTypes: objTypes };
+      if (genreList.length) filter.genres = genreList;   // omit = all genres
+      if (packages.length) filter.packages = packages;   // omit = all services
       const data = await gql({
         operationName: 'GetPopularTitles',
         variables: { country: 'US', language: 'en', first: 100, filter },
@@ -539,7 +536,7 @@
         }`,
       });
       const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
-      const label = genreList.map(g => genreLookup[g] || g).join('/');
+      const label = genreList.length ? genreList.map(g => genreLookup[g] || g).join('/') : 'All';
       const results = {};
       for (const e of data.data.popularTitles.edges) {
         const c = e.node.content;
@@ -641,18 +638,17 @@
       const andTokens = tokenizeField(andRaw);
       for (const t of andTokens) resolvedGroups.push([t]);
 
-      if (!resolvedGroups.length) {
-        status.textContent = 'No valid genres entered.';
-        btn.disabled = false;
-        return;
-      }
+      // nothing specified — fetch without any genre filter (all genres, all services)
+      if (!resolvedGroups.length) resolvedGroups.push([]);
 
       status.textContent = 'Fetching…';
       try {
+        const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
         const allSets = [];
         for (const group of resolvedGroups) {
-          const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
-          status.textContent = 'Fetching: ' + group.map(g => genreLookup[g] || g).join(' OR ') + '…';
+          status.textContent = group.length
+            ? 'Fetching: ' + group.map(g => genreLookup[g] || g).join(' OR ') + '…'
+            : 'Fetching all…';
           allSets.push(await fetchTitles(group, packages, objTypes));
         }
         let common = new Set(Object.keys(allSets[0]));
