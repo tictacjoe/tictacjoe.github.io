@@ -514,8 +514,8 @@
 
     async function fetchTitles(genreList, packages, objTypes) {
       const filter = { objectTypes: objTypes };
-      if (genreList.length) filter.genres = genreList;   // omit = all genres
-      if (packages.length) filter.packages = packages;   // omit = all services
+      if (genreList.length) filter.genres = genreList;
+      if (packages.length) filter.packages = packages;
       const data = await gql({
         operationName: 'GetPopularTitles',
         variables: { country: 'US', language: 'en', first: 100, filter },
@@ -524,6 +524,7 @@
             edges { node {
               content(country: $country, language: $language) {
                 title originalReleaseYear
+                genres { translation(language: $language) }
                 credits { role name }
                 scoring { imdbScore tomatoMeter }
               }
@@ -535,8 +536,6 @@
           }
         }`,
       });
-      const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
-      const label = genreList.length ? genreList.map(g => genreLookup[g] || g).join('/') : 'All';
       const results = {};
       for (const e of data.data.popularTitles.edges) {
         const c = e.node.content;
@@ -547,13 +546,14 @@
         const imdb = scoring.imdbScore;
         const rt = scoring.tomatoMeter;
         const title = c.title || '';
+        const titleGenres = (c.genres || []).map(g => g.translation).join(', ');
         const flatrate = (e.node.offers || [])
           .filter(o => o.monetizationType === 'FLATRATE')
           .map(o => o.package?.clearName)
           .filter(Boolean);
         const services = [...new Set(flatrate)].join(', ');
         results[title] = {
-          genre: label,
+          genre: titleGenres,
           title,
           year: c.originalReleaseYear ? String(c.originalReleaseYear) : '',
           imdb: imdb != null ? imdb.toFixed(1) : '',
@@ -638,7 +638,6 @@
       const andTokens = tokenizeField(andRaw);
       for (const t of andTokens) resolvedGroups.push([t]);
 
-      // nothing specified — fetch without any genre filter (all genres, all services)
       if (!resolvedGroups.length) resolvedGroups.push([]);
 
       status.textContent = 'Fetching…';
@@ -653,11 +652,7 @@
         }
         let common = new Set(Object.keys(allSets[0]));
         for (const s of allSets.slice(1)) common = new Set([...common].filter(t => t in s));
-        currentRows = [...common].map(title => {
-          const row = { ...allSets[0][title] };
-          if (allSets.length > 1) row.genre = allSets.map(s => s[title]?.genre).filter(Boolean).join(' & ');
-          return row;
-        });
+        currentRows = [...common].map(title => ({ ...allSets[0][title] }));
         currentRows = sortRows(currentRows, sortCol, sortAsc);
         status.textContent = currentRows.length + ' title' + (currentRows.length !== 1 ? 's' : '') + ' found.';
         renderTable(currentRows);
