@@ -59,9 +59,6 @@
       font-family: 'Helvetica', 'Arial', sans-serif;
       font-size: 0.92em;
     }
-    .genre-field-box {
-      position: relative;
-    }
     .genre-field-box label {
       font-size: 0.8em;
       text-transform: uppercase;
@@ -70,12 +67,18 @@
       display: block;
       margin-bottom: 4px;
     }
+    /* input-wrap provides the anchor point for the dropdown */
+    .input-wrap {
+      position: relative;
+      display: inline-block;
+    }
     .genre-field-box input[type="text"] {
       padding: 6px 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 1em;
       width: 260px;
+      display: block;
     }
     .genre-field-box input[type="text"].active-field {
       border-color: #2a6db5;
@@ -196,7 +199,7 @@
     @media (max-width: 600px) {
       .controls { flex-direction: column; }
       .genre-fields { flex-direction: column; }
-      .genre-field-box input[type="text"] { width: 100%; }
+      .input-wrap, .genre-field-box input[type="text"] { width: 100%; }
     }
   </style>
 </head>
@@ -247,14 +250,18 @@
     <div class="genre-fields">
       <div class="genre-field-box">
         <label for="genre-or">OR — match any of these</label>
-        <input type="text" id="genre-or" placeholder="action horror comedy…" autocomplete="off" class="active-field">
-        <div id="ac-or" class="ac-dropdown"></div>
+        <div class="input-wrap">
+          <input type="text" id="genre-or" placeholder="action horror comedy…" autocomplete="off" class="active-field">
+          <div id="ac-or" class="ac-dropdown"></div>
+        </div>
         <div class="genre-hint">Titles matching ANY genre listed &nbsp;<span class="genre-clear" onclick="clearField('genre-or')">clear</span></div>
       </div>
       <div class="genre-field-box">
         <label for="genre-and">AND — must also include</label>
-        <input type="text" id="genre-and" placeholder="thriller drama…" autocomplete="off">
-        <div id="ac-and" class="ac-dropdown"></div>
+        <div class="input-wrap">
+          <input type="text" id="genre-and" placeholder="thriller drama…" autocomplete="off">
+          <div id="ac-and" class="ac-dropdown"></div>
+        </div>
         <div class="genre-hint">Intersect with each of these genres &nbsp;<span class="genre-clear" onclick="clearField('genre-and')">clear</span></div>
       </div>
     </div>
@@ -345,7 +352,6 @@
         const { token } = currentToken();
         if (token.length < 2 || !genres.length) { dropdown.style.display = 'none'; return; }
 
-        // starts-with matches first, then contains
         const starts = genres.filter(g => g.translation.toLowerCase().startsWith(token));
         const contains = genres.filter(g =>
           !g.translation.toLowerCase().startsWith(token) &&
@@ -357,7 +363,7 @@
 
         dropdown.innerHTML = '';
         activeIdx = -1;
-        matches.forEach((g, i) => {
+        matches.forEach(g => {
           const item = document.createElement('div');
           item.className = 'ac-item';
           item.textContent = g.translation.toLowerCase();
