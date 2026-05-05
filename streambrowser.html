@@ -59,6 +59,9 @@
       font-family: 'Helvetica', 'Arial', sans-serif;
       font-size: 0.92em;
     }
+    .genre-field-box {
+      position: relative;
+    }
     .genre-field-box label {
       font-size: 0.8em;
       text-transform: uppercase;
@@ -90,6 +93,33 @@
       margin-left: 8px;
     }
     .genre-clear:hover { text-decoration: underline; }
+
+    .ac-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+      z-index: 200;
+      min-width: 200px;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+      margin-top: 2px;
+    }
+    .ac-item {
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.88em;
+      color: #333;
+      font-family: 'Helvetica', 'Arial', sans-serif;
+    }
+    .ac-item:hover, .ac-item.ac-active {
+      background: #e8f0ff;
+      color: #2a6db5;
+    }
 
     .sort-row {
       display: flex;
@@ -217,12 +247,14 @@
     <div class="genre-fields">
       <div class="genre-field-box">
         <label for="genre-or">OR — match any of these</label>
-        <input type="text" id="genre-or" placeholder="action horror comedy…" class="active-field">
+        <input type="text" id="genre-or" placeholder="action horror comedy…" autocomplete="off" class="active-field">
+        <div id="ac-or" class="ac-dropdown"></div>
         <div class="genre-hint">Titles matching ANY genre listed &nbsp;<span class="genre-clear" onclick="clearField('genre-or')">clear</span></div>
       </div>
       <div class="genre-field-box">
         <label for="genre-and">AND — must also include</label>
-        <input type="text" id="genre-and" placeholder="thriller drama…">
+        <input type="text" id="genre-and" placeholder="thriller drama…" autocomplete="off">
+        <div id="ac-and" class="ac-dropdown"></div>
         <div class="genre-hint">Intersect with each of these genres &nbsp;<span class="genre-clear" onclick="clearField('genre-and')">clear</span></div>
       </div>
     </div>
@@ -296,6 +328,96 @@
       el.focus();
     }
 
+    // --- Autocomplete ---
+
+    function setupAutocomplete(inputId, dropdownId) {
+      const input = document.getElementById(inputId);
+      const dropdown = document.getElementById(dropdownId);
+      let activeIdx = -1;
+
+      function currentToken() {
+        const val = input.value;
+        const lastSpace = val.lastIndexOf(' ');
+        return { prefix: val.slice(0, lastSpace + 1), token: val.slice(lastSpace + 1).toLowerCase() };
+      }
+
+      function showSuggestions() {
+        const { token } = currentToken();
+        if (token.length < 2 || !genres.length) { dropdown.style.display = 'none'; return; }
+
+        // starts-with matches first, then contains
+        const starts = genres.filter(g => g.translation.toLowerCase().startsWith(token));
+        const contains = genres.filter(g =>
+          !g.translation.toLowerCase().startsWith(token) &&
+          g.translation.toLowerCase().includes(token)
+        );
+        const matches = [...starts, ...contains].slice(0, 10);
+
+        if (!matches.length) { dropdown.style.display = 'none'; return; }
+
+        dropdown.innerHTML = '';
+        activeIdx = -1;
+        matches.forEach((g, i) => {
+          const item = document.createElement('div');
+          item.className = 'ac-item';
+          item.textContent = g.translation.toLowerCase();
+          item.addEventListener('mousedown', e => {
+            e.preventDefault();
+            selectSuggestion(g.translation.toLowerCase());
+          });
+          dropdown.appendChild(item);
+        });
+        dropdown.style.display = 'block';
+      }
+
+      function selectSuggestion(name) {
+        const { prefix } = currentToken();
+        input.value = prefix + name + ' ';
+        dropdown.style.display = 'none';
+        activeIdx = -1;
+        input.focus();
+      }
+
+      function highlightItem(idx) {
+        const items = dropdown.querySelectorAll('.ac-item');
+        items.forEach((el, i) => el.classList.toggle('ac-active', i === idx));
+        if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+      }
+
+      input.addEventListener('input', showSuggestions);
+
+      input.addEventListener('keydown', e => {
+        const items = dropdown.querySelectorAll('.ac-item');
+        if (dropdown.style.display === 'none' || !items.length) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeIdx = Math.min(activeIdx + 1, items.length - 1);
+          highlightItem(activeIdx);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeIdx = Math.max(activeIdx - 1, -1);
+          highlightItem(activeIdx);
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+          if (activeIdx >= 0 && items[activeIdx]) {
+            e.preventDefault();
+            selectSuggestion(items[activeIdx].textContent);
+          } else {
+            dropdown.style.display = 'none';
+          }
+        } else if (e.key === 'Escape') {
+          dropdown.style.display = 'none';
+          activeIdx = -1;
+        }
+      });
+
+      input.addEventListener('blur', () => {
+        dropdown.style.display = 'none';
+        activeIdx = -1;
+      });
+    }
+
+    // --- API helpers ---
+
     async function gql(payload) {
       const r = await fetch(WORKER, {
         method: 'POST',
@@ -314,6 +436,8 @@
         if (Date.now() - ts < CACHE_TTL) {
           genres = cachedData;
           renderGenreList();
+          setupAutocomplete('genre-or', 'ac-or');
+          setupAutocomplete('genre-and', 'ac-and');
           return;
         }
       }
@@ -325,6 +449,8 @@
       genres = data.data.genres.sort((a, b) => a.translation.localeCompare(b.translation));
       localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: genres }));
       renderGenreList();
+      setupAutocomplete('genre-or', 'ac-or');
+      setupAutocomplete('genre-and', 'ac-and');
     }
 
     function renderGenreList() {
@@ -342,7 +468,8 @@
     function resolveToken(token) {
       const n = parseInt(token);
       if (!isNaN(n) && n >= 1 && n <= genres.length) return genres[n - 1].shortName;
-      const match = genres.find(g => g.translation.toLowerCase().includes(token));
+      const match = genres.find(g => g.translation.toLowerCase() === token)
+        || genres.find(g => g.translation.toLowerCase().includes(token));
       return match ? match.shortName : null;
     }
 
@@ -405,10 +532,8 @@
     function renderTable(rows) {
       const tbody = document.getElementById('tbody');
       tbody.textContent = '';
-
       const cols = ['genre', 'title', 'year', 'imdb', 'rt', 'director', 'lead1', 'lead2', 'lead3'];
       const numCols = new Set(['year', 'imdb', 'rt']);
-
       for (const r of rows) {
         const tr = document.createElement('tr');
         for (const col of cols) {
@@ -421,7 +546,6 @@
         }
         tbody.appendChild(tr);
       }
-
       document.getElementById('results').style.display = '';
       document.querySelectorAll('th').forEach(th => {
         th.classList.toggle('sorted', th.dataset.col === sortCol);
@@ -456,12 +580,8 @@
       sortAsc = sortCol === 'year';
 
       const resolvedGroups = [];
-
-      // OR field: all tokens fetched in one call (API treats multiple genres as OR)
       const orTokens = orRaw.split(/\s+/).filter(Boolean).map(t => resolveToken(t)).filter(Boolean);
       if (orTokens.length) resolvedGroups.push(orTokens);
-
-      // AND field: each token is a separate fetch; results are intersected
       const andTokens = andRaw.split(/\s+/).filter(Boolean).map(t => resolveToken(t)).filter(Boolean);
       for (const t of andTokens) resolvedGroups.push([t]);
 
@@ -478,16 +598,13 @@
           status.textContent = 'Fetching: ' + group.join(' OR ') + '…';
           allSets.push(await fetchTitles(group, packages, objTypes));
         }
-
         let common = new Set(Object.keys(allSets[0]));
         for (const s of allSets.slice(1)) common = new Set([...common].filter(t => t in s));
-
         currentRows = [...common].map(title => {
           const row = { ...allSets[0][title] };
           if (allSets.length > 1) row.genre = allSets.map(s => s[title]?.genre).filter(Boolean).join(' & ');
           return row;
         });
-
         currentRows = sortRows(currentRows, sortCol, sortAsc);
         status.textContent = currentRows.length + ' title' + (currentRows.length !== 1 ? 's' : '') + ' found.';
         renderTable(currentRows);
