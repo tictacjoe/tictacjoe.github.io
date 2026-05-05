@@ -53,7 +53,6 @@ The action assembles the site by:
     <nav>
       <ul>
         <li><a href="/">Home</a></li>
-        <li><a href="/blog">Blog</a></li>
         <li><a href="https://github.com/tictacjoe">GitHub</a></li>
       </ul>
     </nav>
