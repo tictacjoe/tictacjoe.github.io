@@ -22,7 +22,7 @@ GitHub Actions builds and deploys everything on push to `main`.
     vite.config.js       → base: '/family-tree/'
     dist/                → built output (gitignored, built by CI)
   .github/workflows/
-    deploy-family-tree.yml  → builds family-tree app + assembles + deploys
+    deploy-site.yml        → builds family-tree app + assembles + deploys
 ```
 
 ## How Deployment Works
