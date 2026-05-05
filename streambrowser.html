@@ -34,6 +34,13 @@
     .control-group input[type="radio"] {
       margin-right: 6px;
     }
+    .nfx-codes-link {
+      font-size: 0.78em;
+      color: #888;
+      margin: -2px 0 6px 22px;
+      display: block;
+    }
+    .nfx-codes-link a { color: #2a6db5; }
 
     .genre-chip {
       display: inline-block;
@@ -67,7 +74,6 @@
       display: block;
       margin-bottom: 4px;
     }
-    /* input-wrap provides the anchor point for the dropdown */
     .input-wrap {
       position: relative;
       display: inline-block;
@@ -171,7 +177,7 @@
       font-family: 'Helvetica', 'Arial', sans-serif;
       font-size: 0.85em;
       width: 100%;
-      min-width: 800px;
+      min-width: 900px;
     }
     th {
       text-align: left;
@@ -195,6 +201,7 @@
     tr:hover td { background: #f5f8ff; }
     td.num { text-align: right; padding-right: 16px; }
     th.num { text-align: right; padding-right: 16px; }
+    td.services { font-size: 0.82em; color: #555; }
 
     @media (max-width: 600px) {
       .controls { flex-direction: column; }
@@ -223,6 +230,7 @@
       <div class="control-group" id="services-group">
         <h3>Services <small style="font-weight:normal;text-transform:none;letter-spacing:0">(blank = all)</small></h3>
         <label><input type="checkbox" value="nfx"> Netflix</label>
+        <span class="nfx-codes-link">(<a href="https://tictacjoe.github.io/netflix-browse/codes.html">explore Netflix sub-genre codes</a>)</span>
         <label><input type="checkbox" value="hbo"> Max (HBO)</label>
         <label><input type="checkbox" value="hlu"> Hulu</label>
         <label><input type="checkbox" value="prv"> Amazon Prime</label>
@@ -285,6 +293,7 @@
             <th data-col="year" class="num">Year</th>
             <th data-col="imdb" class="num">IMDB</th>
             <th data-col="rt" class="num">RT%</th>
+            <th data-col="services">Services</th>
             <th data-col="director">Director</th>
             <th data-col="lead1">Lead 1</th>
             <th data-col="lead2">Lead 2</th>
@@ -487,11 +496,17 @@
         variables: { country: 'US', language: 'en', first: 100, filter },
         query: `query GetPopularTitles($country: Country!, $language: Language!, $first: Int!, $filter: TitleFilter) {
           popularTitles(country: $country, first: $first, filter: $filter) {
-            edges { node { content(country: $country, language: $language) {
-              title originalReleaseYear
-              credits { role name }
-              scoring { imdbScore tomatoMeter }
-            } } }
+            edges { node {
+              content(country: $country, language: $language) {
+                title originalReleaseYear
+                credits { role name }
+                scoring { imdbScore tomatoMeter }
+              }
+              offers(country: $country, platform: WEB) {
+                monetizationType
+                package { clearName }
+              }
+            } }
           }
         }`,
       });
@@ -507,12 +522,18 @@
         const imdb = scoring.imdbScore;
         const rt = scoring.tomatoMeter;
         const title = c.title || '';
+        const flatrate = (e.node.offers || [])
+          .filter(o => o.monetizationType === 'FLATRATE')
+          .map(o => o.package?.clearName)
+          .filter(Boolean);
+        const services = [...new Set(flatrate)].join(', ');
         results[title] = {
           genre: label,
           title,
           year: c.originalReleaseYear ? String(c.originalReleaseYear) : '',
           imdb: imdb != null ? imdb.toFixed(1) : '',
           rt: rt != null ? String(rt) : '',
+          services,
           director: directors[0] || '',
           lead1: actors[0] || '',
           lead2: actors[1] || '',
@@ -538,13 +559,14 @@
     function renderTable(rows) {
       const tbody = document.getElementById('tbody');
       tbody.textContent = '';
-      const cols = ['genre', 'title', 'year', 'imdb', 'rt', 'director', 'lead1', 'lead2', 'lead3'];
+      const cols = ['genre', 'title', 'year', 'imdb', 'rt', 'services', 'director', 'lead1', 'lead2', 'lead3'];
       const numCols = new Set(['year', 'imdb', 'rt']);
       for (const r of rows) {
         const tr = document.createElement('tr');
         for (const col of cols) {
           const td = document.createElement('td');
           if (numCols.has(col)) td.className = 'num';
+          if (col === 'services') td.className = 'services';
           let val = r[col];
           if (col === 'rt' && val) val = val + '%';
           td.appendChild(text(val));
