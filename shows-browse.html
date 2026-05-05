@@ -187,8 +187,8 @@
     <div class="genre-row">
       <div>
         <label for="genre-input">Genres</label>
-        <input type="text" id="genre-input" placeholder="e.g. act hrr  or  act and scf">
-        <div class="genre-hint">OR: act hrr &nbsp; AND: act and hrr &nbsp; Mixed: act hrr and scf</div>
+        <input type="text" id="genre-input" placeholder="e.g. action horror  or  1 and 12">
+        <div class="genre-hint">OR: action horror &nbsp; AND: action and horror &nbsp; Numbers also work: 1 and 12</div>
       </div>
     </div>
 
@@ -281,11 +281,8 @@
         const num = document.createElement('span');
         num.style.color = '#999';
         num.textContent = String(i + 1).padStart(2, ' ') + '. ';
-        const code = document.createElement('b');
-        code.textContent = g.shortName;
-        const name = document.createTextNode(' ' + g.translation);
+        const name = document.createTextNode(g.translation.toLowerCase());
         line.appendChild(num);
-        line.appendChild(code);
         line.appendChild(name);
         el.appendChild(line);
       });
@@ -294,9 +291,7 @@
     function resolveToken(token) {
       const n = parseInt(token);
       if (!isNaN(n) && n >= 1 && n <= genres.length) return genres[n - 1].shortName;
-      const match = genres.find(g =>
-        g.shortName === token || g.translation.toLowerCase().includes(token)
-      );
+      const match = genres.find(g => g.translation.toLowerCase().includes(token));
       return match ? match.shortName : null;
     }
 
