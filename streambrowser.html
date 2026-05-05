@@ -536,6 +536,8 @@
           }
         }`,
       });
+      const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
+      const filterLabel = genreList.length ? genreList.map(g => genreLookup[g] || g).join(', ') : null;
       const results = {};
       for (const e of data.data.popularTitles.edges) {
         const c = e.node.content;
@@ -553,7 +555,7 @@
           .filter(Boolean);
         const services = [...new Set(flatrate)].join(', ');
         results[title] = {
-          genre: titleGenres,
+          genre: filterLabel !== null ? filterLabel : titleGenres,
           title,
           year: c.originalReleaseYear ? String(c.originalReleaseYear) : '',
           imdb: imdb != null ? imdb.toFixed(1) : '',
