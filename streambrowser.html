@@ -35,16 +35,31 @@
       margin-right: 6px;
     }
 
-    .genre-row {
+    .genre-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      margin: 2px 3px 2px 0;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      font-size: 0.82em;
+      color: #444;
+      background: #f8f8f8;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .genre-chip:hover { background: #e8f0ff; border-color: #2a6db5; color: #2a6db5; }
+
+    .genre-fields {
       display: flex;
-      gap: 12px;
+      gap: 20px;
       align-items: flex-start;
       flex-wrap: wrap;
       margin-bottom: 20px;
       font-family: 'Helvetica', 'Arial', sans-serif;
       font-size: 0.92em;
     }
-    .genre-row label {
+    .genre-field-box label {
       font-size: 0.8em;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -52,18 +67,29 @@
       display: block;
       margin-bottom: 4px;
     }
-    .genre-row input[type="text"] {
+    .genre-field-box input[type="text"] {
       padding: 6px 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
       font-size: 1em;
-      width: 280px;
+      width: 260px;
+    }
+    .genre-field-box input[type="text"].active-field {
+      border-color: #2a6db5;
+      box-shadow: 0 0 0 2px rgba(42,109,181,0.15);
     }
     .genre-hint {
-      font-size: 0.8em;
-      color: #888;
+      font-size: 0.78em;
+      color: #999;
       margin-top: 4px;
     }
+    .genre-clear {
+      font-size: 0.78em;
+      color: #2a6db5;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .genre-clear:hover { text-decoration: underline; }
 
     .sort-row {
       display: flex;
@@ -139,7 +165,8 @@
 
     @media (max-width: 600px) {
       .controls { flex-direction: column; }
-      .genre-row input[type="text"] { width: 100%; }
+      .genre-fields { flex-direction: column; }
+      .genre-field-box input[type="text"] { width: 100%; }
     }
   </style>
 </head>
@@ -181,17 +208,22 @@
         <label><input type="radio" name="type" value="BOTH"> Both</label>
       </div>
 
-      <div class="control-group" id="genres-list">
-        <h3>Available Genres</h3>
+      <div class="control-group" id="genres-list" style="max-width:460px">
+        <h3>Genres <span style="font-weight:normal;text-transform:none;letter-spacing:0;font-size:1em;color:#999">— click to add to focused field</span></h3>
         <div id="genre-display" style="color:#aaa;font-size:0.85em;line-height:1.8">Loading...</div>
       </div>
     </div>
 
-    <div class="genre-row">
-      <div>
-        <label for="genre-input">Genres</label>
-        <input type="text" id="genre-input" placeholder="e.g. action horror  or  1 and 12">
-        <div class="genre-hint">OR: action horror &nbsp; AND: action and horror &nbsp; Numbers also work: 1 and 12</div>
+    <div class="genre-fields">
+      <div class="genre-field-box">
+        <label for="genre-or">OR — match any of these</label>
+        <input type="text" id="genre-or" placeholder="action horror comedy…" class="active-field">
+        <div class="genre-hint">Titles matching ANY genre listed &nbsp;<span class="genre-clear" onclick="clearField('genre-or')">clear</span></div>
+      </div>
+      <div class="genre-field-box">
+        <label for="genre-and">AND — must also include</label>
+        <input type="text" id="genre-and" placeholder="thriller drama…">
+        <div class="genre-hint">Intersect with each of these genres &nbsp;<span class="genre-clear" onclick="clearField('genre-and')">clear</span></div>
       </div>
     </div>
 
@@ -239,10 +271,29 @@
     let currentRows = [];
     let sortCol = 'rt';
     let sortAsc = false;
+    let activeFieldId = 'genre-or';
 
     function text(str) {
-      const el = document.createTextNode(str == null ? '' : String(str));
-      return el;
+      return document.createTextNode(str == null ? '' : String(str));
+    }
+
+    function clearField(id) {
+      document.getElementById(id).value = '';
+    }
+
+    ['genre-or', 'genre-and'].forEach(id => {
+      document.getElementById(id).addEventListener('focus', () => {
+        activeFieldId = id;
+        document.getElementById('genre-or').classList.toggle('active-field', id === 'genre-or');
+        document.getElementById('genre-and').classList.toggle('active-field', id === 'genre-and');
+      });
+    });
+
+    function addGenreToField(name) {
+      const el = document.getElementById(activeFieldId);
+      const cur = el.value.trim();
+      el.value = cur ? cur + ' ' + name : name;
+      el.focus();
     }
 
     async function gql(payload) {
@@ -280,14 +331,11 @@
       const el = document.getElementById('genre-display');
       el.textContent = '';
       genres.forEach((g, i) => {
-        const line = document.createElement('div');
-        const num = document.createElement('span');
-        num.style.color = '#999';
-        num.textContent = String(i + 1).padStart(2, ' ') + '. ';
-        const name = document.createTextNode(g.translation.toLowerCase());
-        line.appendChild(num);
-        line.appendChild(name);
-        el.appendChild(line);
+        const chip = document.createElement('span');
+        chip.className = 'genre-chip';
+        chip.textContent = (i + 1) + '. ' + g.translation.toLowerCase();
+        chip.addEventListener('click', () => addGenreToField(g.translation.toLowerCase()));
+        el.appendChild(chip);
       });
     }
 
@@ -402,14 +450,20 @@
       const packages = [...document.querySelectorAll('#services-group input:checked')].map(el => el.value);
       const typeVal = document.querySelector('input[name="type"]:checked').value;
       const objTypes = typeVal === 'BOTH' ? ['MOVIE', 'SHOW'] : [typeVal];
-      const raw = document.getElementById('genre-input').value.trim().toLowerCase();
+      const orRaw = document.getElementById('genre-or').value.trim().toLowerCase();
+      const andRaw = document.getElementById('genre-and').value.trim().toLowerCase();
       sortCol = document.querySelector('input[name="sort"]:checked').value;
       sortAsc = sortCol === 'year';
 
-      const andGroups = raw.split('and').map(g => g.trim().split(/\s+/).filter(Boolean));
-      const resolvedGroups = andGroups
-        .map(group => group.map(t => resolveToken(t)).filter(Boolean))
-        .filter(g => g.length);
+      const resolvedGroups = [];
+
+      // OR field: all tokens fetched in one call (API treats multiple genres as OR)
+      const orTokens = orRaw.split(/\s+/).filter(Boolean).map(t => resolveToken(t)).filter(Boolean);
+      if (orTokens.length) resolvedGroups.push(orTokens);
+
+      // AND field: each token is a separate fetch; results are intersected
+      const andTokens = andRaw.split(/\s+/).filter(Boolean).map(t => resolveToken(t)).filter(Boolean);
+      for (const t of andTokens) resolvedGroups.push([t]);
 
       if (!resolvedGroups.length) {
         status.textContent = 'No valid genres entered.';
