@@ -98,10 +98,13 @@ p {
 /* Hero Section */
 .hero-image {
     width: 100%;
-    height: 300px;
+    max-width: 500px; /* Reduced from full width */
+    height: auto;
+    max-height: 250px;
     object-fit: cover;
     border-radius: 8px;
-    margin-bottom: 32px;
+    margin: 0 auto 32px;
+    display: block;
     box-shadow: 0 4px 20px var(--shadow);
 }
 
@@ -113,6 +116,28 @@ a {
 a:hover {
     text-decoration: underline;
     color: var(--link-hover);
+}
+
+/* Hidden projects toggle */
+.hidden-project {
+    display: none !important;
+}
+.show-all-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 0.85em;
+    transition: all 0.2s;
+}
+.show-all-btn:hover {
+    border-color: var(--link);
+    color: var(--link);
 }
 
 /* General lists */

@@ -21,37 +21,37 @@
     <div class="container">
       <div class="blurb">
         <h1>Joseph Kidd</h1>
-        <p>Software Engineer & Tinkerer. Exploring AI, system automation, and web experiments.</p>
-
+        
         <img src="/pics/weblake.png" alt="Lake view" class="hero-image">
 
         <h2>Projects</h2>
-        <div class="projects-grid">
+        <div class="projects-grid" id="projectsGrid">
           <a href="/streambrowser.html" class="project-card">
             <div class="meta">
               <strong>StreamBrowser</strong>
               <div>Interactive media browsing interface.</div>
             </div>
           </a>
-          <a href="/netflix-browse/index.html" class="project-card">
+          <a href="/netflix-browse/index.html" class="project-card hidden-project">
             <div class="meta">
               <strong>Netflix Browse</strong>
               <div>Explore and filter Netflix categories.</div>
             </div>
           </a>
-          <a href="/event-control.html" class="project-card">
+          <a href="/event-control.html" class="project-card hidden-project">
             <div class="meta">
               <strong>Event Control</strong>
               <div>Interface for managing logic and events.</div>
             </div>
           </a>
-          <a href="/family-tree/" class="project-card">
+          <a href="/family-tree/" class="project-card hidden-project">
             <div class="meta">
               <strong>Family Tree</strong>
               <div>React-based genealogy visualization.</div>
             </div>
           </a>
         </div>
+        <button class="show-all-btn" id="toggleBtn">Show more projects</button>
       </div>
     </div>
     <footer>
@@ -60,5 +60,19 @@
         <li><a href="https://github.com/tictacjoe">github.com/tictacjoe</a></li>
       </ul>
     </footer>
+
+    <script>
+      const toggleBtn = document.getElementById('toggleBtn');
+      const hiddenProjects = document.querySelectorAll('.hidden-project');
+      let isVisible = false;
+
+      toggleBtn.addEventListener('click', () => {
+        isVisible = !isVisible;
+        hiddenProjects.forEach(p => {
+          p.classList.toggle('hidden-project', !isVisible);
+        });
+        toggleBtn.textContent = isVisible ? 'Show fewer projects' : 'Show more projects';
+      });
+    </script>
   </body>
 </html>
