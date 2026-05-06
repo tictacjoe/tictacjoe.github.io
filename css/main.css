@@ -14,17 +14,17 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #121212;
-        --text: #ffffff; /* Pure white for maximum brightness */
-        --text-muted: #cccccc; /* Brighter gray */
-        --nav-text: #bbbbbb;
-        --link: #82b1ff; /* Brighter blue */
-        --link-hover: #b3e5fc;
-        --border: #333;
-        --border-light: #222;
-        --card-bg: #1e1e1e;
-        --shadow: rgba(0,0,0,0.3);
-        --shadow-hover: rgba(0,0,0,0.4);
+        --bg: #0a0a0a; /* Slightly deeper black */
+        --text: #ffffff;
+        --text-muted: #e0e0e0; /* Brighter for better visibility */
+        --nav-text: #d0d0d0; /* Brighter for better visibility */
+        --link: #90caf9; /* Brighter, more saturated blue */
+        --link-hover: #bbdefb;
+        --border: #444; /* Higher contrast border */
+        --border-light: #333;
+        --card-bg: #1a1a1a;
+        --shadow: rgba(0,0,0,0.6);
+        --shadow-hover: rgba(0,0,0,0.8);
     }
 }
 
@@ -75,6 +75,7 @@ h1 {
     font-weight: 700;
     margin-bottom: 4px;
     color: var(--text);
+    text-align: center; /* Center main heading */
 }
 h2 {
     font-size: 1.1em;
@@ -98,18 +99,17 @@ p {
 /* Hero Section */
 .hero-image {
     width: 100%;
-    max-width: 500px;
+    max-width: 480px;
     height: auto;
-    max-height: 250px;
+    max-height: 120px;
     object-fit: cover;
     border-radius: 8px;
-    margin: 0 auto 32px;
+    margin: 0 auto 16px;
     display: block;
-    box-shadow: 0 4px 20px var(--shadow);
     
-    /* Edge blending effect (feathering) */
-    -webkit-mask-image: radial-gradient(circle, black 50%, rgba(0, 0, 0, 0) 100%);
-    mask-image: radial-gradient(circle, black 50%, rgba(0, 0, 0, 0) 100%);
+    /* Heavier edge blending effect (feathering) */
+    -webkit-mask-image: radial-gradient(circle, black 30%, rgba(0, 0, 0, 0) 85%);
+    mask-image: radial-gradient(circle, black 30%, rgba(0, 0, 0, 0) 85%);
 }
 
 /* Links */

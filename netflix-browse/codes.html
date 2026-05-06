@@ -4,38 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Netflix Sub-genre Codes — tictacjoe</title>
+<link rel="stylesheet" type="text/css" href="/css/main.css">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #fafafa; color: #222;
-    font-family: 'Georgia', serif; font-size: 17px; line-height: 1.6;
-    padding: 40px 20px 80px; max-width: 1300px; margin: 0 auto;
-  }
-  nav {
-    margin-bottom: 48px; border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 12px; text-align: center;
-  }
-  nav a {
-    font-family: 'Helvetica','Arial',sans-serif; font-size: 0.9em;
-    font-weight: bold; letter-spacing: 0.03em; text-transform: uppercase;
-    color: #2a6db5; text-decoration: none; margin: 0 12px;
-  }
-  nav a:hover { text-decoration: underline; color: #1a4d8a; }
-  header { margin-bottom: 36px; }
-  header h1 {
-    font-family: 'Helvetica','Arial',sans-serif;
-    font-size: 2.2em; font-weight: 700; color: #111; margin-bottom: 4px;
-  }
-  header p {
-    font-family: 'Helvetica','Arial',sans-serif;
-    font-size: 0.85em; color: #888;
-  }
-  .section-label {
-    font-family: 'Helvetica','Arial',sans-serif; font-size: 1.1em;
-    font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-    color: #555; margin-top: 32px; margin-bottom: 10px;
-    border-bottom: 1px solid #e8e8e8; padding-bottom: 4px;
-  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { max-width: 1300px; }
 
   /* ── Controls ── */
   .controls-row {
@@ -43,48 +15,49 @@
     flex-wrap: wrap; margin-bottom: 8px;
   }
   #codeSearch {
-    padding: 0.35rem 0.8rem; border: 1px solid #e0e0e0; border-radius: 4px;
+    padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 4px;
     font-family: 'Helvetica','Arial',sans-serif; font-size: 0.85rem; width: 280px;
+    background: var(--card-bg); color: var(--text);
   }
   .btn-sm {
-    padding: 0.3rem 0.9rem; border: 1px solid #e0e0e0; background: #fff; color: #555;
+    padding: 0.3rem 0.9rem; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-muted);
     border-radius: 4px; cursor: pointer;
     font-family: 'Helvetica','Arial',sans-serif; font-size: 0.78rem; transition: all 0.12s;
   }
-  .btn-sm:hover { border-color: #2a6db5; color: #2a6db5; }
+  .btn-sm:hover { border-color: var(--link); color: var(--link); }
   .btn-sm.active { background: #f5c518; border-color: #d4a800; color: #000; font-weight: bold; }
-  .btn-sm.danger { border-color: #e0e0e0; }
-  .btn-sm.danger:hover { border-color: #c0392b; color: #c0392b; }
+  .btn-sm.danger { border-color: var(--border); }
+  .btn-sm.danger:hover { border-color: #ef5350; color: #ef5350; }
 
   .edit-hint {
-    font-family: 'Helvetica','Arial',sans-serif; font-size: 0.8rem; color: #888;
+    font-family: 'Helvetica','Arial',sans-serif; font-size: 0.8rem; color: var(--text-muted);
     margin-bottom: 8px; display: none;
   }
   body.edit-mode .edit-hint { display: block; }
 
   .codes-meta {
     font-family: 'Helvetica','Arial',sans-serif; font-size: 0.75rem;
-    color: #aaa; margin-bottom: 6px;
+    color: var(--text-muted); margin-bottom: 6px;
   }
 
   /* ── Codes grid ── */
   .codes-grid {
     display: flex; flex-wrap: wrap; gap: 0.35rem;
     max-height: 55vh; overflow-y: auto;
-    border: 1px solid #e8e8e8; border-radius: 4px;
-    padding: 12px; background: #fff; margin-bottom: 20px;
+    border: 1px solid var(--border-light); border-radius: 4px;
+    padding: 12px; background: var(--card-bg); margin-bottom: 20px;
   }
   .code-btn {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 0.22rem 0.75rem; border: 1px solid #e0e0e0;
-    background: #fafafa; color: #333; border-radius: 4px; cursor: pointer;
+    padding: 0.22rem 0.75rem; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); border-radius: 4px; cursor: pointer;
     font-family: 'Helvetica','Arial',sans-serif; font-size: 0.8rem;
     transition: all 0.1s; white-space: nowrap; user-select: none;
   }
-  .code-btn:hover { border-color: #2a6db5; color: #2a6db5; background: #f0f5fb; }
-  .code-num { color: #bbb; font-size: 0.68rem; font-family: monospace; }
+  .code-btn:hover { border-color: var(--link); color: var(--link); background: var(--shadow); }
+  .code-num { color: var(--text-muted); font-size: 0.68rem; font-family: monospace; }
   .edit-x {
-    display: none; color: #c0392b; font-weight: bold;
+    display: none; color: #ef5350; font-weight: bold;
     font-size: 0.82rem; line-height: 1; margin-left: 2px;
     cursor: pointer; padding: 0 2px;
   }
@@ -92,66 +65,68 @@
 
   /* ── Manual entry ── */
   .manual-section {
-    background: #fff; border: 1px solid #e8e8e8; border-radius: 4px;
+    background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 4px;
     padding: 20px 24px; margin-top: 8px;
   }
   .manual-section h2 {
     font-family: 'Helvetica','Arial',sans-serif; font-size: 1em;
     font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-    color: #555; margin-bottom: 12px; border-bottom: 1px solid #e8e8e8; padding-bottom: 4px;
+    color: var(--nav-text); margin-bottom: 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 4px;
   }
   .url-row {
     display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-    font-family: 'Helvetica','Arial',sans-serif; font-size: 0.88rem; color: #555;
+    font-family: 'Helvetica','Arial',sans-serif; font-size: 0.88rem; color: var(--text);
     margin-bottom: 10px;
   }
   .url-prefix {
-    font-family: monospace; font-size: 0.85rem; color: #888;
-    background: #f5f5f5; padding: 0.3rem 0.6rem; border-radius: 4px;
+    font-family: monospace; font-size: 0.85rem; color: var(--text-muted);
+    background: var(--shadow); padding: 0.3rem 0.6rem; border-radius: 4px;
   }
   .url-row input {
     width: 130px; padding: 0.32rem 0.6rem;
-    border: 1px solid #e0e0e0; border-radius: 4px;
+    border: 1px solid var(--border); border-radius: 4px;
     font-family: monospace; font-size: 0.88rem;
+    background: var(--bg); color: var(--text);
   }
   .url-row button {
-    padding: 0.32rem 1.1rem; background: #2a6db5; color: #fff;
+    padding: 0.32rem 1.1rem; background: var(--link); color: #fff;
     border: none; border-radius: 4px; cursor: pointer;
     font-family: 'Helvetica','Arial',sans-serif; font-size: 0.85rem; font-weight: bold;
   }
-  .url-row button:hover { background: #1a4d8a; }
+  .url-row button:hover { background: var(--link-hover); }
   .manual-note {
-    font-family: 'Helvetica','Arial',sans-serif; font-size: 0.8rem; color: #888;
+    font-family: 'Helvetica','Arial',sans-serif; font-size: 0.8rem; color: var(--text-muted);
   }
-  .manual-note a { color: #2a6db5; }
+  .manual-note a { color: var(--link); }
 
   footer {
-    margin-top: 60px; border-top: 1px solid #e0e0e0; padding-top: 16px;
-    font-size: 0.85em; color: #888; font-family: 'Helvetica','Arial',sans-serif; text-align: center;
+    margin-top: 60px; border-top: 1px solid var(--border); padding-top: 16px;
+    font-size: 0.85em; color: var(--text-muted); font-family: 'Helvetica','Arial',sans-serif; text-align: center;
   }
-  footer a { color: #888; text-decoration: none; }
-  footer a:hover { color: #333; }
+  footer a { color: var(--text-muted); text-decoration: none; }
+  footer a:hover { color: var(--text); }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="/">Home</a>
-  <a href="https://github.com/tictacjoe">GitHub</a>
-  <a href="index.html">← Netflix Browse</a>
+  <ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="https://github.com/tictacjoe">GitHub</a></li>
+    <li><a href="index.html">← Netflix Browse</a></li>
+  </ul>
 </nav>
 
-<header style="text-align:center;">
-  <a href="/">
-    <img src="/pics/weblake.png"
-         alt="Lake view"
-         style="display:block;width:100%;max-width:480px;height:100px;object-fit:cover;object-position:center;border-radius:6px;margin:0 auto 16px;opacity:0.85;">
-  </a>
-  <h1 style="text-align:left;">Netflix Sub-genre Codes</h1>
-  <p style="text-align:left;">Click any genre to open it directly on Netflix · 1860 codes</p>
-</header>
+<div class="container">
+  <header style="text-align:center;">
+    <a href="/">
+      <img src="/pics/weblake.png"
+           alt="Lake view"
+           class="hero-image">
+    </a>
+  </header>
 
-<div class="section-label">Browse Genres</div>
+  <div class="section-label">Browse Genres</div>
 
 <div class="controls-row">
   <input id="codeSearch" type="text" placeholder="Search genres…" oninput="filterCodes()">
