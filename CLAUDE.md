@@ -12,9 +12,6 @@ GitHub Actions builds and deploys everything on push to `main`.
 ```
 /                        → static HTML pages (served as-is)
   index.html             → home page
-  blog/
-    index.html           → blog post list (update manually when adding posts)
-    just-four-ducks-for-now.html  → blog post
   css/main.css           → site-wide stylesheet
   pics/                  → images
   family-tree/           → Vite + React app (SOURCE — not served directly)
@@ -37,7 +34,6 @@ The action assembles the site by:
 ## Adding Content
 
 - **New page**: Add an HTML file anywhere, link to it from `index.html`
-- **New blog post**: Add HTML file in `blog/`, add link to `blog/index.html`
 - **Update family tree**: Edit `family-tree/src/App.jsx` — push triggers rebuild
 
 ## Page template (copy for new pages)
