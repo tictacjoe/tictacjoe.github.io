@@ -218,9 +218,16 @@
            class="hero-image">
     </a>
 
-    <p style="text-align:center; font-size: 0.9em; margin-top: -8px; margin-bottom: 24px;">
-      <a href="/netflix-browse/">Netflix Browse</a> — click here to explore Netflix sub-genres
-    </p>
+    <div class="nl-search-bar" style="margin-bottom: 24px; padding: 16px 20px; background: #f0f4f8; border-radius: 8px; border: 1px solid #d0dbe5; font-family: 'Helvetica', 'Arial', sans-serif;">
+      <label for="nl-input" style="font-weight: bold; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: #2a6db5; display: block; margin-bottom: 8px;">
+        🔍 Natural Language Search
+      </label>
+      <div style="display: flex; gap: 10px;">
+        <input type="text" id="nl-input" placeholder='e.g. "sci-fi movies on netflix sorted by imdb" or "horror and comedy tv shows on hulu"' style="flex: 1; padding: 10px 14px; font-size: 0.95em; border: 1px solid #ccc; border-radius: 6px;">
+        <button id="nl-search-btn" style="background: #2a6db5; color: white; border: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; font-size: 0.92em; cursor: pointer;">Search</button>
+      </div>
+      <div style="font-size: 0.78em; color: #666; margin-top: 6px;">Type any query in plain English to auto-set filters, or use manual controls below.</div>
+    </div>
 
     <div class="controls">
       <div class="control-group" id="services-group">
@@ -658,6 +665,124 @@
       }
       btn.disabled = false;
     });
+
+    function parseAndApplyNLQuery(query) {
+      const q = query.toLowerCase();
+      
+      // Services
+      const serviceKeywords = {
+        nfx: ['netflix', 'nfx'],
+        mxx: ['max', 'hbo', 'mxx'],
+        hlu: ['hulu', 'hlu'],
+        prv: ['prime', 'amazon', 'prv'],
+        dnp: ['disney', 'disney+', 'dnp'],
+        apl: ['apple', 'apple tv', 'apl'],
+        pct: ['peacock', 'pct'],
+        prm: ['paramount', 'paramount+', 'prm'],
+        mbi: ['mubi', 'mbi'],
+        sho: ['showtime', 'sho'],
+      };
+
+      const matchedServices = new Set();
+      for (const [code, kws] of Object.entries(serviceKeywords)) {
+        if (kws.some(kw => q.includes(kw))) {
+          matchedServices.add(code);
+        }
+      }
+
+      document.querySelectorAll('#services-group input[type="checkbox"]').forEach(cb => {
+        cb.checked = matchedServices.has(cb.value);
+      });
+
+      // Type
+      const hasTv = ['tv', 'show', 'shows', 'series'].some(kw => q.includes(kw));
+      const hasMovie = ['movie', 'movies', 'film', 'films'].some(kw => q.includes(kw));
+      let typeVal = 'MOVIE';
+      if (hasTv && hasMovie) typeVal = 'BOTH';
+      else if (hasTv) typeVal = 'SHOW';
+
+      const typeRadio = document.querySelector(`input[name="type"][value="${typeVal}"]`);
+      if (typeRadio) typeRadio.checked = true;
+
+      // Sort
+      let sortVal = 'rt';
+      if (['imdb', 'rating', 'score'].some(kw => q.includes(kw))) sortVal = 'imdb';
+      else if (['year', 'newest', 'recent', 'date'].some(kw => q.includes(kw))) sortVal = 'year';
+
+      const sortRadio = document.querySelector(`input[name="sort"][value="${sortVal}"]`);
+      if (sortRadio) sortRadio.checked = true;
+
+      // Genres
+      const genreKeywords = {
+        'action': 'action & adventure',
+        'adventure': 'action & adventure',
+        'animated': 'animation',
+        'animation': 'animation',
+        'anime': 'animation',
+        'comedy': 'comedy',
+        'comedies': 'comedy',
+        'funny': 'comedy',
+        'crime': 'crime',
+        'documentary': 'documentary',
+        'documentaries': 'documentary',
+        'doc': 'documentary',
+        'drama': 'drama',
+        'fantasy': 'fantasy',
+        'horror': 'horror',
+        'scary': 'horror',
+        'history': 'history',
+        'historical': 'history',
+        'music': 'music & musical',
+        'musical': 'music & musical',
+        'romance': 'romance',
+        'romantic': 'romance',
+        'sci-fi': 'science-fiction',
+        'scifi': 'science-fiction',
+        'science fiction': 'science-fiction',
+        'thriller': 'mystery & thriller',
+        'mystery': 'mystery & thriller',
+        'war': 'war & military',
+        'western': 'western',
+      };
+
+      const orGenres = [];
+      const andGenres = [];
+
+      if (q.includes(' and ')) {
+        const parts = q.split(' and ');
+        for (let i = 0; i < parts.length; i++) {
+          const p = parts[i];
+          const found = [];
+          for (const [kw, gName] of Object.entries(genreKeywords)) {
+            if (p.includes(kw) && !found.includes(gName)) found.push(gName);
+          }
+          if (i === 0) orGenres.push(...found);
+          else andGenres.push(...found);
+        }
+      } else {
+        for (const [kw, gName] of Object.entries(genreKeywords)) {
+          if (q.includes(kw) && !orGenres.includes(gName)) orGenres.push(gName);
+        }
+      }
+
+      document.getElementById('genre-or').value = orGenres.join(', ');
+      document.getElementById('genre-and').value = andGenres.join(', ');
+
+      document.getElementById('search').click();
+    }
+
+    const nlBtn = document.getElementById('nl-search-btn');
+    const nlInput = document.getElementById('nl-input');
+    if (nlBtn && nlInput) {
+      nlBtn.addEventListener('click', () => {
+        if (nlInput.value.trim()) parseAndApplyNLQuery(nlInput.value.trim());
+      });
+      nlInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && nlInput.value.trim()) {
+          parseAndApplyNLQuery(nlInput.value.trim());
+        }
+      });
+    }
 
     loadGenres();
   </script>
