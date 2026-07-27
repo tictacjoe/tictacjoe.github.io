@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JustWatch AI Assistant — tictacjoe</title>
+  <link rel="stylesheet" type="text/css" href="/css/main.css">
+  <style>
+    body {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 16px;
+    }
+    header h1 {
+      font-size: 1.8rem;
+      margin: 0 0 8px 0;
+      color: #38bdf8;
+    }
+    header p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin: 0;
+    }
+    .chat-container {
+      background: #1e293b;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      height: 600px;
+      overflow: hidden;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .message {
+      max-width: 85%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: #0284c7;
+      color: #ffffff;
+      border-bottom-right-radius: 2px;
+    }
+    .message.assistant {
+      align-self: flex-start;
+      background: #334155;
+      color: #f1f5f9;
+      border-bottom-left-radius: 2px;
+      border: 1px solid #475569;
+    }
+    .message.system {
+      align-self: center;
+      background: #0f172a;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      border: 1px dashed #334155;
+    }
+    .title-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .title-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-weight: bold;
+      color: #38bdf8;
+      margin-bottom: 4px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      background: #0284c7;
+      color: white;
+      margin-right: 4px;
+    }
+    .input-area {
+      display: flex;
+      gap: 10px;
+      padding: 16px;
+      background: #0f172a;
+      border-top: 1px solid #334155;
+    }
+    .input-area input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #ffffff;
+      font-size: 1rem;
+      outline: none;
+    }
+    .input-area input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+    .input-area button {
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      background: #0284c7;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .input-area button:hover {
+      background: #0369a1;
+    }
+    .sample-queries {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .sample-chip {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .sample-chip:hover {
+      border-color: #38bdf8;
+      color: #38bdf8;
+      background: #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>JustWatch AI Assistant</h1>
+    <p>Ask anything about movie and TV show streaming availability, ratings, and recommendations</p>
+  </header>
+
+  <div class="chat-container">
+    <div class="chat-messages" id="messages">
+      <div class="message assistant">
+        👋 Hello! I am your AI Assistant for JustWatch. Ask me anything in plain English like:
+        <br><br>
+        • <em>"Where can I watch Star Trek: Strange New Worlds?"</em><br>
+        • <em>"Recommend 3 top rated sci-fi movies on Netflix"</em><br>
+        • <em>"Find 90s horror movies available on Hulu or Prime"</em>
+      </div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="query-input" placeholder="Ask JustWatch AI..." autocomplete="off">
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+  <div class="sample-queries">
+    <span class="sample-chip" onclick="runSample('Where can I watch Star Trek Strange New Worlds?')">Where can I watch Star Trek Strange New Worlds?</span>
+    <span class="sample-chip" onclick="runSample('Top rated sci-fi movies on Netflix')">Top rated sci-fi movies on Netflix</span>
+    <span class="sample-chip" onclick="runSample('What horror comedy shows are on Hulu?')">What horror comedy shows are on Hulu?</span>
+  </div>
+
+  <script>
+    const WORKER = 'https://netflix-browse.tictacjoe.workers.dev';
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('query-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    const GENRE_MAP = {
+      'action': 'act', 'adventure': 'act', 'animation': 'ani', 'anime': 'ani',
+      'comedy': 'cmy', 'crime': 'crm', 'documentary': 'doc', 'drama': 'drm',
+      'family': 'fml', 'fantasy': 'fnt', 'horror': 'hrr', 'history': 'hst',
+      'music': 'msc', 'reality': 'rly', 'romance': 'rma', 'sci-fi': 'scf',
+      'scifi': 'scf', 'science fiction': 'scf', 'star trek': 'scf',
+      'thriller': 'trl', 'mystery': 'trl', 'war': 'war', 'western': 'wsn'
+    };
+
+    const SERVICE_MAP = {
+      'netflix': 'nfx', 'max': 'mxx', 'hbo': 'mxx', 'hulu': 'hlu',
+      'prime': 'prv', 'amazon': 'prv', 'disney': 'dnp', 'disney+': 'dnp',
+      'apple': 'apl', 'apple tv': 'apl', 'peacock': 'pct', 'paramount': 'prm',
+      'paramount+': 'prm', 'mubi': 'mbi', 'showtime': 'sho'
+    };
+
+    function appendMessage(role, text, cards = null) {
+      const msg = document.createElement('div');
+      msg.className = `message ${role}`;
+      msg.innerHTML = text;
+      
+      if (cards && cards.length) {
+        cards.forEach(c => {
+          const card = document.createElement('div');
+          card.className = 'title-card';
+          const services = c.flatrate.length ? c.flatrate.map(s => `<span class="badge">${s}</span>`).join(' ') : '<span style="color:#94a3b8">Rent/Buy</span>';
+          card.innerHTML = `
+            <div class="title-header">
+              <span>${c.title} (${c.year})</span>
+              <span>⭐ ${c.imdb ? c.imdb : 'N/A'} | 🍅 ${c.rt ? c.rt + '%' : 'N/A'}</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #94a3b8; margin: 6px 0;">${c.description}</div>
+            <div style="font-size: 0.85rem; margin-top: 8px;"><strong>Available on:</strong> ${services}</div>
+          `;
+          msg.appendChild(card);
+        });
+      }
+      
+      messagesEl.appendChild(msg);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function queryJustWatch(query) {
+      const q = query.toLowerCase();
+      
+      // Parse parameters
+      let objType = 'ALL';
+      if (['show', 'shows', 'tv', 'series', 'episodes', 'episode'].some(k => q.includes(k))) objType = 'SHOW';
+      else if (['movie', 'movies', 'film', 'films'].some(k => q.includes(k))) objType = 'MOVIE';
+
+      let matchedServices = [];
+      for (const [kw, code] of Object.entries(SERVICE_MAP)) {
+        if (q.includes(kw) && !matchedServices.includes(code)) matchedServices.push(code);
+      }
+
+      let matchedGenres = [];
+      for (const [kw, code] of Object.entries(GENRE_MAP)) {
+        if (q.includes(kw) && !matchedGenres.includes(code)) matchedGenres.push(code);
+      }
+
+      let cleanSearch = query
+        .replace(/where can i watch|where can i stream|recommend|top rated|best|movies|movie|shows|show|series|episodes|on netflix|on hulu|on disney|on max|on hbo|on prime|on amazon|on paramount|on apple|on peacock/gi, '')
+        .trim();
+
+      const filter = {};
+      if (objType !== 'ALL') filter.objectTypes = [objType];
+      if (cleanSearch.length > 2) filter.searchQuery = cleanSearch;
+      else {
+        if (matchedServices.length) filter.packages = matchedServices;
+        if (matchedGenres.length) filter.genres = matchedGenres;
+      }
+
+      const payload = {
+        operationName: 'GetPopularTitles',
+        variables: { country: 'US', language: 'en', first: 10, filter },
+        query: `query GetPopularTitles($country: Country!, $language: Language!, $first: Int!, $filter: TitleFilter) {
+          popularTitles(country: $country, first: $first, filter: $filter) {
+            edges { node {
+              content(country: $country, language: $language) {
+                title originalReleaseYear shortDescription scoring { imdbScore tomatoMeter }
+              }
+              offers(country: $country, platform: WEB) {
+                monetizationType package { clearName }
+              }
+            } }
+          }
+        }`
+      };
+
+      try {
+        const r = await fetch(WORKER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        const edges = data?.data?.popularTitles?.edges || [];
+        
+        return edges.map(e => {
+          const c = e.node.content;
+          const offers = e.node.offers || [];
+          const flatrate = [...new Set(offers.filter(o => o.monetizationType === 'FLATRATE' && o.package).map(o => o.package.clearName))];
+          return {
+            title: c.title,
+            year: c.originalReleaseYear || 'N/A',
+            description: c.shortDescription || 'No description available.',
+            imdb: c.scoring?.imdbScore ? c.scoring.imdbScore.toFixed(1) : null,
+            rt: c.scoring?.tomatoMeter || null,
+            flatrate
+          };
+        });
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    }
+
+    async function handleUserSend() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      
+      appendMessage('user', text);
+      inputEl.value = '';
+      
+      const loadingId = 'loading-' + Date.now();
+      appendMessage('system', 'Searching JustWatch API...');
+      
+      const titles = await queryJustWatch(text);
+      
+      // Remove system loading message
+      const systemMsgs = document.querySelectorAll('.message.system');
+      if (systemMsgs.length) systemMsgs[systemMsgs.length - 1].remove();
+
+      if (!titles.length) {
+        appendMessage('assistant', `I searched JustWatch for <em>"${text}"</em> but couldn't find exact matches. Try specifying a popular title, service (Netflix, Hulu, Prime), or genre.`);
+      } else {
+        appendMessage('assistant', `Here are the top results from JustWatch for your query:`, titles);
+      }
+    }
+
+    function runSample(queryText) {
+      inputEl.value = queryText;
+      handleUserSend();
+    }
+
+    sendBtn.addEventListener('click', handleUserSend);
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleUserSend();
+    });
+  </script>
+</body>
+</html>
