@@ -453,7 +453,19 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      return r.json();
+      const text = await r.text();
+      try {
+        const json = JSON.parse(text);
+        if (json.errors) {
+          throw new Error(json.errors.map(e => e.message).join(', '));
+        }
+        return json;
+      } catch (err) {
+        if (text.trim().startsWith('<')) {
+          throw new Error('JustWatch API rate limit or Cloudflare challenge received. Try narrowing down with a service or genre.');
+        }
+        throw err;
+      }
     }
 
     async function loadGenres() {
@@ -514,10 +526,13 @@
       return match ? match.shortName : null;
     }
 
-    async function fetchTitles(genreList, packages, objTypes) {
+    let activeSearchQuery = null;
+
+    async function fetchTitles(genreList, packages, objTypes, searchQuery = null) {
       const filter = { objectTypes: objTypes };
-      if (genreList.length) filter.genres = genreList;
-      if (packages.length) filter.packages = packages;
+      if (genreList && genreList.length) filter.genres = genreList;
+      if (packages && packages.length) filter.packages = packages;
+      if (searchQuery) filter.searchQuery = searchQuery;
       const data = await gql({
         operationName: 'GetPopularTitles',
         variables: { country: 'US', language: 'en', first: 100, filter },
@@ -539,8 +554,10 @@
         }`,
       });
       const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
-      const filterLabel = genreList.length ? genreList.map(g => genreLookup[g] || g).join(', ') : null;
+      const filterLabel = (genreList && genreList.length) ? genreList.map(g => genreLookup[g] || g).join(', ') : null;
       const results = {};
+      if (!data?.data?.popularTitles?.edges) return results;
+
       for (const e of data.data.popularTitles.edges) {
         const c = e.node.content;
         const credits = c.credits || [];
@@ -649,12 +666,13 @@
         const genreLookup = Object.fromEntries(genres.map(g => [g.shortName, g.translation]));
         const allSets = [];
         for (const group of resolvedGroups) {
-          status.textContent = group.length
+          const fetchLabel = group.length
             ? 'Fetching: ' + group.map(g => genreLookup[g] || g).join(' OR ') + '…'
-            : 'Fetching all…';
-          allSets.push(await fetchTitles(group, packages, objTypes));
+            : (activeSearchQuery ? `Searching "${activeSearchQuery}"…` : 'Fetching all…');
+          status.textContent = fetchLabel;
+          allSets.push(await fetchTitles(group, packages, objTypes, activeSearchQuery));
         }
-        let common = new Set(Object.keys(allSets[0]));
+        let common = new Set(Object.keys(allSets[0] || {}));
         for (const s of allSets.slice(1)) common = new Set([...common].filter(t => t in s));
         currentRows = [...common].map(title => ({ ...allSets[0][title] }));
         currentRows = sortRows(currentRows, sortCol, sortAsc);
@@ -678,7 +696,7 @@
         dnp: ['disney', 'disney+', 'dnp'],
         apl: ['apple', 'apple tv', 'apl'],
         pct: ['peacock', 'pct'],
-        prm: ['paramount', 'paramount+', 'prm'],
+        prm: ['paramount', 'paramount+', 'prm', 'star trek'],
         mbi: ['mubi', 'mbi'],
         sho: ['showtime', 'sho'],
       };
@@ -695,24 +713,25 @@
       });
 
       // Type
-      const hasTv = ['tv', 'show', 'shows', 'series'].some(kw => q.includes(kw));
+      const hasTv = ['tv', 'show', 'shows', 'series', 'episode', 'episodes', 'season', 'seasons'].some(kw => q.includes(kw));
       const hasMovie = ['movie', 'movies', 'film', 'films'].some(kw => q.includes(kw));
-      let typeVal = 'MOVIE';
+      let typeVal = 'SHOW';
       if (hasTv && hasMovie) typeVal = 'BOTH';
-      else if (hasTv) typeVal = 'SHOW';
+      else if (hasMovie && !hasTv) typeVal = 'MOVIE';
 
       const typeRadio = document.querySelector(`input[name="type"][value="${typeVal}"]`);
       if (typeRadio) typeRadio.checked = true;
 
       // Sort
-      let sortVal = 'rt';
+      let sortVal = 'year';
       if (['imdb', 'rating', 'score'].some(kw => q.includes(kw))) sortVal = 'imdb';
-      else if (['year', 'newest', 'recent', 'date'].some(kw => q.includes(kw))) sortVal = 'year';
+      else if (['rt', 'rotten', 'tomatoes', 'critic'].some(kw => q.includes(kw))) sortVal = 'rt';
+      else if (['year', 'newest', 'recent', 'date', 'latest'].some(kw => q.includes(kw))) sortVal = 'year';
 
       const sortRadio = document.querySelector(`input[name="sort"][value="${sortVal}"]`);
       if (sortRadio) sortRadio.checked = true;
 
-      // Genres
+      // Genres & Title Search
       const genreKeywords = {
         'action': 'action & adventure',
         'adventure': 'action & adventure',
@@ -739,6 +758,8 @@
         'sci-fi': 'science-fiction',
         'scifi': 'science-fiction',
         'science fiction': 'science-fiction',
+        'star trek': 'science-fiction',
+        'star wars': 'science-fiction',
         'thriller': 'mystery & thriller',
         'mystery': 'mystery & thriller',
         'war': 'war & military',
@@ -764,6 +785,13 @@
           if (q.includes(kw) && !orGenres.includes(gName)) orGenres.push(gName);
         }
       }
+
+      // Check if user entered a specific show/movie title (like "star trek strange new worlds" or "stranger things")
+      let cleanQuery = query
+        .replace(/newest|latest|episodes|episode|seasons|season|shows|show|movies|movie|films|film|series|sorted by|sort by|on netflix|on hulu|on disney|on max|on hbo|on prime|on amazon|on apple|on peacock|on paramount|by imdb|by rt|by year/gi, '')
+        .trim();
+
+      activeSearchQuery = cleanQuery.length > 2 ? cleanQuery : null;
 
       document.getElementById('genre-or').value = orGenres.join(', ');
       document.getElementById('genre-and').value = andGenres.join(', ');
