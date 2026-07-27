@@ -531,8 +531,11 @@
     async function fetchTitles(genreList, packages, objTypes, searchQuery = null) {
       const filter = { objectTypes: objTypes };
       if (genreList && genreList.length) filter.genres = genreList;
-      if (packages && packages.length) filter.packages = packages;
-      if (searchQuery) filter.searchQuery = searchQuery;
+      if (searchQuery) {
+        filter.searchQuery = searchQuery;
+      } else if (packages && packages.length) {
+        filter.packages = packages;
+      }
       const data = await gql({
         operationName: 'GetPopularTitles',
         variables: { country: 'US', language: 'en', first: 100, filter },
