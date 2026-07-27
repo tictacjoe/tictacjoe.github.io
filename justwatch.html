@@ -3,6 +3,7 @@
 <head>
   <title>JustWatch AI Assistant — tictacjoe</title>
   <link rel="stylesheet" type="text/css" href="/css/main.css">
+  <script data-goatcounter="https://claimcheck.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   <style>
     body { max-width: 1200px; font-family: 'Helvetica', 'Arial', sans-serif; }
 
@@ -357,6 +358,14 @@
       appendMessage('user', text);
       inputEl.value = '';
       
+      if (window.goatcounter && window.goatcounter.count) {
+        window.goatcounter.count({
+          path: '/justwatch/search',
+          title: 'JustWatch Search: ' + text,
+          event: true
+        });
+      }
+
       appendMessage('system', 'Searching JustWatch API...');
       
       const titles = await queryJustWatch(text);
