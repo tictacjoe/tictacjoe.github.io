@@ -277,6 +277,37 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
+    async function fetchJustWatchData(filter) {
+      const payload = {
+        operationName: 'GetPopularTitles',
+        variables: { country: 'US', language: 'en', first: 10, filter },
+        query: `query GetPopularTitles($country: Country!, $language: Language!, $first: Int!, $filter: TitleFilter) {
+          popularTitles(country: $country, first: $first, filter: $filter) {
+            edges { node {
+              content(country: $country, language: $language) {
+                title originalReleaseYear fullPath shortDescription scoring { imdbScore tomatoMeter }
+              }
+              offers(country: $country, platform: WEB) {
+                monetizationType standardWebURL package { clearName }
+              }
+            } }
+          }
+        }`
+      };
+      try {
+        const r = await fetch(WORKER, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        return data?.data?.popularTitles?.edges || [];
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    }
+
     async function queryJustWatch(query) {
       const q = query.toLowerCase();
       
@@ -294,61 +325,78 @@
         if (q.includes(kw) && !matchedGenres.includes(code)) matchedGenres.push(code);
       }
 
-      let cleanSearch = query
-        .replace(/where can i watch|where can i stream|recommend|top rated|best|movies|movie|shows|show|series|episodes|on netflix|on hulu|on disney|on max|on hbo|on prime|on amazon|on paramount|on apple|on peacock/gi, '')
+      // Strip conversational filler phrases
+      let clean = query
+        .replace(/what are some|what is|where can i watch|where can i stream|recommend|top rated|highly rated|good|along the lines of|similar to|like|movies|movie|shows|show|series|episodes|films|film|on netflix|on hulu|on disney|on max|on hbo|on prime|on amazon|on paramount|on apple|on peacock|etc/gi, '')
+        .replace(/[^\w\s]/g, ' ')
         .trim();
 
-      const filter = {};
-      if (objType !== 'ALL') filter.objectTypes = [objType];
-      if (cleanSearch.length > 2) {
-        filter.searchQuery = cleanSearch;
-      } else {
-        if (matchedServices.length) filter.packages = matchedServices;
-        if (matchedGenres.length) filter.genres = matchedGenres;
+      const allEdges = [];
+
+      // 1. If genres detected, fetch top titles in that genre
+      if (matchedGenres.length) {
+        const genreFilter = {};
+        if (objType !== 'ALL') genreFilter.objectTypes = [objType];
+        genreFilter.genres = matchedGenres;
+        if (matchedServices.length) genreFilter.packages = matchedServices;
+        const gEdges = await fetchJustWatchData(genreFilter);
+        allEdges.push(...gEdges);
       }
 
-      const payload = {
-        operationName: 'GetPopularTitles',
-        variables: { country: 'US', language: 'en', first: 10, filter },
-        query: `query GetPopularTitles($country: Country!, $language: Language!, $first: Int!, $filter: TitleFilter) {
-          popularTitles(country: $country, first: $first, filter: $filter) {
-            edges { node {
-              content(country: $country, language: $language) {
-                title originalReleaseYear fullPath shortDescription scoring { imdbScore tomatoMeter }
-              }
-              offers(country: $country, platform: WEB) {
-                monetizationType standardWebURL package { clearName }
-              }
-            } }
-          }
-        }`
-      };
+      // 2. If specific words/titles remain in clean query, search each title word
+      const words = clean.split(/\s+/).filter(w => w.length > 3);
+      if (words.length) {
+        // Try exact clean string search
+        const titleFilter = { searchQuery: clean };
+        if (objType !== 'ALL') titleFilter.objectTypes = [objType];
+        const tEdges = await fetchJustWatchData(titleFilter);
+        allEdges.push(...tEdges);
 
-      try {
-        const r = await fetch(WORKER, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await r.json();
-        const edges = data?.data?.popularTitles?.edges || [];
-        
-        return edges.map(e => {
-          const c = e.node.content;
-          return {
-            title: c.title,
-            year: c.originalReleaseYear || 'N/A',
-            fullPath: c.fullPath,
-            description: c.shortDescription || 'No description available.',
-            imdb: c.scoring?.imdbScore ? c.scoring.imdbScore.toFixed(1) : null,
-            rt: c.scoring?.tomatoMeter || null,
-            offers: e.node.offers || []
-          };
-        });
-      } catch (err) {
-        console.error(err);
-        return [];
+        // If multiple title keywords like "contact interstellar gravity"
+        for (const w of words) {
+          if (['sci-fi', 'scifi', 'horror', 'action', 'comedy', 'drama'].includes(w)) continue;
+          const wordFilter = { searchQuery: w };
+          if (objType !== 'ALL') wordFilter.objectTypes = [objType];
+          const wEdges = await fetchJustWatchData(wordFilter);
+          allEdges.push(...wEdges);
+        }
       }
+
+      // Fallback: general popular search if nothing matched
+      if (!allEdges.length) {
+        const fallbackFilter = {};
+        if (objType !== 'ALL') fallbackFilter.objectTypes = [objType];
+        if (matchedServices.length) fallbackFilter.packages = matchedServices;
+        const fEdges = await fetchJustWatchData(fallbackFilter);
+        allEdges.push(...fEdges);
+      }
+
+      // Deduplicate results by title name
+      const seenTitles = new Set();
+      const uniqueResults = [];
+
+      for (const e of allEdges) {
+        const c = e.node.content;
+        const title = c.title;
+        if (!title || seenTitles.has(title.toLowerCase())) continue;
+        seenTitles.add(title.toLowerCase());
+
+        uniqueResults.push({
+          title,
+          year: c.originalReleaseYear || 'N/A',
+          fullPath: c.fullPath,
+          description: c.shortDescription || 'No description available.',
+          imdb: c.scoring?.imdbScore ? c.scoring.imdbScore.toFixed(1) : null,
+          _imdb: c.scoring?.imdbScore || 0,
+          rt: c.scoring?.tomatoMeter || null,
+          offers: e.node.offers || []
+        });
+      }
+
+      // Sort results by IMDb score descending
+      uniqueResults.sort((a, b) => b._imdb - a._imdb);
+
+      return uniqueResults.slice(0, 10);
     }
 
     async function handleUserSend() {
